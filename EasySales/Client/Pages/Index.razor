@@ -1,0 +1,46 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject AuthenticationStateProvider authenticationStateProvider
+
+@attribute [Authorize]
+
+<style>
+    body {
+        background-image: url(img/indexHomeBg.webp);
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+</style>
+
+<div >
+<h1 style="color:white;">EasySales</h1>
+<h2 style="color:white;">Bienvenidos</h2>
+</div>
+
+@if(Autorizado=false){
+    <p>Inicia sesion por favor!</p>
+}
+
+@code {
+    [Inject]
+    private IAuthService authService { get; set; }
+    private bool Autorizado = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (user != null)
+        {
+            await authService.LoginCookie(user.Name);
+            this.Autorizado = true;
+        }
+        else{
+            this.Autorizado = false;
+        }
+    }
+}
+
+

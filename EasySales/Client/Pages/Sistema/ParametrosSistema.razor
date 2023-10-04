@@ -1,0 +1,115 @@
+﻿@page "/sistema/parametrossistema"
+@using EasySales.Client.Services
+@using EasySales.Shared
+
+<h3>ParametrosSistema</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Tipo Identificacion</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (parametrosSistema != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Descripcion" };
+
+    <SfGrid @ref="parametrosSistemaGrid" DataSource="@parametrosSistema" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+        Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="EasySales.Shared.ParametrosSistema">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as EasySales.Shared.ParametrosSistema)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="EasySales.Shared.ParametrosSistema"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(EasySales.Shared.ParametrosSistema.Id) HeaderText="ID" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.Nombre) HeaderText="Nombre" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.ValorNumerico) HeaderText="Valor Numerico" Type="ColumnType.Number"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.ValorString) HeaderText="Valor Texto"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.FechaCreacion) Visible="false" HeaderText="Fecha Creacion" DefaultValue="@DateTime.Now" EditType="EditType.DateTimePickerEdit"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.UsuarioCreacion) Visible="false" HeaderText="Usuario Creacion" DefaultValue="@defaultUser"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.ParametrosSistema.EmpresaId) Visible="false" HeaderText="Empresa" DefaultValue="@(2)"></GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+
+
+@code {
+    [Inject]
+    public IParametrosSistemaService parametrosSistemaService { get; set; }
+    public IEnumerable<EasySales.Shared.ParametrosSistema> parametrosSistema { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    public SfGrid<EasySales.Shared.ParametrosSistema>? parametrosSistemaGrid { get; set; }
+    public string defaultUser = "Sitema";
+    public string FooterSaveButtonText { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        parametrosSistema = (await parametrosSistemaService.CargarDatos()).ToList();
+        this.SpinnerVisible = false;
+    }
+
+    public async void ActionBeginHandler(ActionEventArgs<EasySales.Shared.ParametrosSistema> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Add")
+            {
+                await parametrosSistemaService.Agregar(Args.Data);
+                parametrosSistema = (await parametrosSistemaService.CargarDatos()).ToList();
+                parametrosSistemaGrid.Refresh();
+            }
+            else
+            {
+                await parametrosSistemaService.Modificar(Args.Data);
+            }
+        }
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            await parametrosSistemaService.Eliminar(Args.Data.Id);
+        }
+    }
+
+    public string GetDialogHeader(EasySales.Shared.ParametrosSistema tipoIdentificacion)
+    {
+        if (tipoIdentificacion.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {tipoIdentificacion.Nombre} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        await parametrosSistemaGrid.CloseEditAsync();
+    }
+
+    public async Task Save()
+    {
+        await parametrosSistemaGrid.EndEditAsync();
+    }
+
+}

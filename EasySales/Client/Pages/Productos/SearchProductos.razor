@@ -1,0 +1,63 @@
+﻿@page "/Productos/searchproductos"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using EasySales.Shared.ViewModels
+<h3>Buscar Productos</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: blue;
+    }
+</style>
+
+<PageTitle>Buscar</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@{
+    var SearchTool = new List<string>() { "Search" };
+    var SearchColumns = new string[] { "Nombre","Categoria" };
+}
+
+@if (vmProductos != null)
+{
+    @*<SfGrid DataSource="@vmProductos" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true Toolbar="@SearchTool">
+        <GridSortSettings>
+            <GridSortColumns>
+                <GridSortColumn Field="Nombre" Direction="SortDirection.Descending"></GridSortColumn>
+            </GridSortColumns>
+        </GridSortSettings>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="5" PageSizes="@pagerDropdownOptions"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false Field=@nameof(VentaProductos.Id) HeaderText="ID Producto" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(VentaProductos.Nombre) HeaderText="Nombre Producto" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(VentaProductos.PrecioCosto) HeaderText="P. Compra" Type="ColumnType.Number"></GridColumn>
+            <GridColumn Field=@nameof(VentaProductos.PrecioVenta) HeaderText="P Venta"></GridColumn>
+            <GridColumn Field=@nameof(VentaProductos.Categoria) HeaderText="Categoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.CheckBox})"></GridColumn>
+            <GridColumn Field=@nameof(VentaProductos.SubCategoria) HeaderText="SubCategoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})"></GridColumn>
+        </GridColumns>
+    </SfGrid>*@
+}
+
+@code{
+    [Inject]
+    public IProductosService ProductosService { get; set; }
+    public List<VentaProductos> vmProductos { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    string[] pagerDropdownOptions = new string[] { "All", "5", "10", "15", "20" };
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        //vmProductos = (await ProductosService.CargarProductos()).ToList();   
+        this.SpinnerVisible = false;
+    }
+
+
+}
+

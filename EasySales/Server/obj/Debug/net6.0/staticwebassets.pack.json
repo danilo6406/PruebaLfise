@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\danilo.chavarria\\source\\repos\\EasySales\\EasySales\\Server\\wwwroot\\Files\\FotosProductos\\2_210.jpg",
+      "PackagePath": "staticwebassets\\Files\\FotosProductos\\2_210.jpg"
+    },
+    {
+      "Id": "C:\\Users\\danilo.chavarria\\source\\repos\\EasySales\\EasySales\\Server\\wwwroot\\Files\\FotosProductos\\2_215.png",
+      "PackagePath": "staticwebassets\\Files\\FotosProductos\\2_215.png"
+    },
+    {
+      "Id": "C:\\Users\\danilo.chavarria\\source\\repos\\EasySales\\EasySales\\Server\\wwwroot\\Files\\FotosProductos\\image1.png",
+      "PackagePath": "staticwebassets\\Files\\FotosProductos\\image1.png"
+    },
+    {
+      "Id": "C:\\Users\\danilo.chavarria\\source\\repos\\EasySales\\EasySales\\Server\\wwwroot\\Files\\FotosProductos\\image2.png",
+      "PackagePath": "staticwebassets\\Files\\FotosProductos\\image2.png"
+    },
+    {
+      "Id": "C:\\Users\\danilo.chavarria\\source\\repos\\EasySales\\EasySales\\Server\\wwwroot\\Files\\FotosProductos\\image3.png",
+      "PackagePath": "staticwebassets\\Files\\FotosProductos\\image3.png"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.EasySales.Server.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.build.EasySales.Server.props",
+      "PackagePath": "build\\EasySales.Server.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.buildMultiTargeting.EasySales.Server.props",
+      "PackagePath": "buildMultiTargeting\\EasySales.Server.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.buildTransitive.EasySales.Server.props",
+      "PackagePath": "buildTransitive\\EasySales.Server.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

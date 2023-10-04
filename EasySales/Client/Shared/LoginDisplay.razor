@@ -1,0 +1,25 @@
+﻿@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        @*<a class="nav-link" href="/identity/account/manage/index">Hola, @context.User.Identity.Name</a>*@
+        <button class="nav-link btn btn-link" @onclick="GoToProfile">Hola, @context.User.Identity.Name</button>
+        <button class="nav-link btn btn-link" @onclick="BeginSignOut">Cerrar Sesion</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/identity/account/register">Register-cocola</a>
+        <a href="login">Inicia Sesion</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+        Navigation.NavigateTo("/logout");
+    }
+
+    private async Task GoToProfile(MouseEventArgs args)
+    {
+        Navigation.NavigateTo("/identity/account/manage/index",true);
+    }
+}

@@ -1,0 +1,259 @@
+﻿@page "/ventas/reservaciones"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using Microsoft.AspNetCore.Authorization
+@using Radzen
+@using Radzen.Blazor
+
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject DialogService dialogService
+
+@attribute [Authorize]
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: red;
+    }
+</style>
+
+<PageTitle>Reservas</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+<h3>Reservaciones</h3>
+<br />
+
+@if (reservaciones != null)
+{
+    <RadzenScheduler @ref=@scheduler SlotRender=@OnSlotRender style="height: 768px;" TItem="Reservaciones" Data=@reservaciones StartProperty="HoraInicio" EndProperty="HoraFin"
+                     TextProperty="Titulo" SelectedIndex="2" AppointmentSelect=@OnAppointmentSelect>
+        <RadzenDayView />
+        <RadzenWeekView />
+        <RadzenMonthView />
+    </RadzenScheduler>
+    <br />
+
+    var SearchColumns = new string[] { "Nombre Cliente", "Identificacion Cliente" };
+
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+    <SfGrid @ref="reservacionesGrid" DataSource="@reservaciones" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() {"Add","Edit", "Update", "Delete", "Cancel","Search"})" TValue="Reservaciones" Width="100%">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as Reservaciones)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="Reservaciones" CommandClicked="OnCommandClicked"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(Reservaciones.Id) HeaderText="ID" AllowFiltering=false></GridColumn>
+            <GridColumn Field=Cliente.Nombre HeaderText="Nombre Cliente" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=Cliente.NumeroIdentificacion HeaderText="Identificacion Cliente" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(Reservaciones.FechaReservacion) HeaderText="Fecha" Type="ColumnType.DateOnly" Format="dd/MM/yyyy"></GridColumn>
+            <GridColumn AllowEditing=false Field=@nameof(Reservaciones.CantidadHoras) HeaderText="Horas"></GridColumn>
+            <GridColumn Field=@nameof(Reservaciones.HoraInicio) HeaderText="Inicio" Type="ColumnType.TimeOnly" Format="hh:mm tt"></GridColumn>
+            <GridColumn Field=@nameof(Reservaciones.HoraFin) HeaderText="Final" Type="ColumnType.TimeOnly" Format="hh:mm tt"></GridColumn>
+            <GridColumn Field=@nameof(Reservaciones.MontoReservacion) HeaderText="MontoReservacion" Format="C2"></GridColumn>
+            <GridColumn HeaderText="Acciones">
+                <GridCommandColumns>
+                    <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Detalles", CssClass = "e-flat", IconCss="e-icons e-edit" })"></GridCommandColumn>
+                </GridCommandColumns>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+
+}
+
+@if (VistaAutorizada = false)
+{
+    <p> Usted no esta autorizado para ver este modulo.</p>
+}
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IReservacionesService reservacionesService { get; set; }
+    public List<Reservaciones> reservaciones { get; set; }
+
+    [Inject]
+    public IProductosService ProductosService { get; set; }
+    public List<Productos> productos { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    public bool VistaAutorizada { get; set; } = false;
+    public SfGrid<Reservaciones>? reservacionesGrid { get; set; }
+    public string? FooterSaveButtonText { get; set; }
+    public Syncfusion.Blazor.Data.Query? subCategoriaFiltroQuery { get; set; }
+
+    RadzenScheduler<Reservaciones> scheduler;
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    IList<Reservaciones> appointments = new List<Reservaciones>
+    {
+        new Reservaciones { HoraInicio = DateTime.Today.AddDays(-2), HoraFin = DateTime.Today.AddDays(-2), Observacion = "Birthday" },
+        //new Appointment { Start = DateTime.Today.AddDays(-11), End = DateTime.Today.AddDays(-10), Text = "Day off" },
+        //new Appointment { Start = DateTime.Today.AddDays(-10), End = DateTime.Today.AddDays(-8), Text = "Work from home" },
+        //new Appointment { Start = DateTime.Today.AddHours(10), End = DateTime.Today.AddHours(12), Text = "Online meeting" },
+        //new Appointment { Start = DateTime.Today.AddHours(10), End = DateTime.Today.AddHours(13), Text = "Skype call" },
+        //new Appointment { Start = DateTime.Today.AddHours(14), End = DateTime.Today.AddHours(14).AddMinutes(30), Text = "Dentist appointment" },
+        //new Appointment { Start = DateTime.Today.AddDays(1), End = DateTime.Today.AddDays(12), Text = "Vacation" },
+    };
+
+    #endregion
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = (await authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+            if (user != null && user.IsAuthenticated)
+            {
+                this.SpinnerVisible = true;
+                this.reservaciones = (await reservacionesService.CargarDatos()).ToList();
+                this.SpinnerVisible = false;
+            }
+            else
+            {
+                this.VistaAutorizada = false;
+            }
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    #region Eventos Controles
+
+    public async void ActionBeginHandler(ActionEventArgs<Reservaciones> Args)
+    {
+        if (Args is not null)
+        {
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+            {
+                if (Args.Action == "Edit")
+                {
+                    await reservacionesService.Modificar(Args.Data);
+                    reservacionesGrid.Refresh();
+                }
+            }
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Add))
+            {
+                NavManager.NavigateTo("/ventas/agregarreservacion", forceLoad: true);
+            }
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+            {
+                await ProductosService.EliminarProducto(Args.Data.Id);
+            }
+        }
+    }
+
+    public string GetDialogHeader(Reservaciones reservaciones)
+    {
+        if (reservaciones.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles reservacion N#: {reservaciones.Id} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        if (reservacionesGrid is not null)
+        {
+            await reservacionesGrid.CloseEditAsync();
+        }
+    }
+
+    public async Task Save()
+    {
+        if (reservacionesGrid is not null)
+        {
+            await reservacionesGrid.EndEditAsync();
+        }
+    }
+
+    public async void OnCommandClicked(CommandClickEventArgs<Reservaciones> args)
+    {
+        try
+        {
+            if (args.CommandColumn.ButtonOption.Content == "Detalles")
+            {
+                //string rolId = args.RowData.Id;
+                //string userId = this.user.Id;
+                //await rolesService.EliminarRolUsuario(rolId, userId);
+                //NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    public async Task ToolbarClickHandler(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (args.Item.Text == "Añadir")
+        {
+            NavManager.NavigateTo("/ventas/agregarreservacion", forceLoad: true);
+        }
+        if (args.Item.Text == "Editar")
+        {
+
+        }
+    }
+
+    #region Calendar
+
+    void OnSlotRender(SchedulerSlotRenderEventArgs args)
+    {
+        // Highlight today in month view
+        if (args.View.Text == "Month" && args.Start.Date == DateTime.Today)
+        {
+            args.Attributes["style"] = "background: rgba(255,220,40,.2);";
+        }
+
+        // Highlight working hours (9-18)
+        if ((args.View.Text == "Week" || args.View.Text == "Day") && args.Start.Hour > 8 && args.Start.Hour < 20)
+        {
+            args.Attributes["style"] = "background: rgba(255,220,40,.2);";
+        }
+    }
+
+    async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<Reservaciones> args)
+    {
+        try
+        {
+            await dialogService.OpenAsync<EditAppointmentPage>("Datos de la Reservacion.", new Dictionary<string, object> { { "reservaciones", args.Data } });
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    #endregion
+
+    #endregion
+
+}

@@ -1,0 +1,201 @@
+﻿@page "/Sistema/Roles/UsuarioRoles/{Id}"
+@using EasySales.Client.Services;
+@using EasySales.Shared
+@using Microsoft.AspNetCore.Authorization;
+@using Syncfusion.Blazor.Navigations;
+
+@inject NavigationManager NavManager
+
+@attribute [Authorize(Roles = "Admin")]
+
+<h3>Roles de Usuario</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Roles Usuario</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (user != null)
+{
+    <div class="card m-3" style="min-width: 18rem; ">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-6">
+                    <h3>Usuario</h3>
+                    <h3>@user.NombreCompleto </h3>
+                </div>
+                <div class="col-6">
+                    <h3>Email</h3>
+                    <h3>@user.Email</h3>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (rolesActuales != null)
+            {
+                var SearchColumnsRoles = new string[] { "Nombre", "Codigo" };
+
+                <SfGrid @ref="rolesActualesGrid" DataSource="@rolesActuales" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+                        Toolbar="@Toolbaritems" TValue="EasySalesServerRoles">
+                    <GridEvents OnToolbarClick="ToolbarClickHandler" TValue="EasySalesServerRoles" CommandClicked="OnCommandClicked"></GridEvents>
+                    <GridSearchSettings Fields="@SearchColumnsRoles"></GridSearchSettings>
+                    <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+                    <GridColumns>
+                        <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(EasySalesServerRoles.Id) HeaderText="ID"
+                                    AllowFiltering=false></GridColumn>
+                        <GridColumn Field=@nameof(EasySalesServerRoles.Name) HeaderText="Nombre" FilterSettings="@(new FilterSettings()
+        {Operator=Operator.Contains})"></GridColumn>
+                        <GridColumn Field=@nameof(EasySalesServerRoles.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings()
+        {Operator=Operator.Contains})"></GridColumn>
+                        <GridColumn Field=@nameof(EasySalesServerRoles.Codigo) HeaderText="Codigo"></GridColumn>
+                        <GridColumn HeaderText="Acciones">
+                            <GridCommandColumns>
+                                <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Quitar Rol", CssClass = "e-flat", IconCss="e-icons e-trash" })"></GridCommandColumn>
+                            </GridCommandColumns>
+                        </GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            }
+        </div>
+        <div class="card-footer text-center">
+            <a href="/sistema/usuarios" class="btn btn-primary m-1">Volver</a>
+        </div>
+    </div>
+
+
+}
+
+
+
+<SfDialog ShowCloseIcon="true" IsModal="true" @bind-Visible="@IsDialogVisible">
+    <DialogTemplates>
+        <Header> Selecciona el nuevo rol. </Header>
+        <Content>
+            <SfGrid @ref="rolesDisponiblesGrid" DataSource="@rolesDisponibles" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+                    Toolbar="@(new List<string>() {"Search"})" TValue="EasySalesServerRoles">
+                <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+                <GridEvents TValue="EasySalesServerRoles" CommandClicked="OnCommandClicked"></GridEvents>
+                <GridColumns>
+                    <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(EasySalesServerRoles.Id) HeaderText="ID"
+                                AllowFiltering=false></GridColumn>
+                    <GridColumn Field=@nameof(EasySalesServerRoles.Name) HeaderText="Nombre" FilterSettings="@(new FilterSettings()
+                        {Operator=Operator.Contains})"></GridColumn>
+                    <GridColumn Field=@nameof(EasySalesServerRoles.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings()
+                        {Operator=Operator.Contains})"></GridColumn>
+                    <GridColumn Field=@nameof(EasySalesServerRoles.Codigo) HeaderText="Codigo" FilterSettings="@(new FilterSettings()
+                {Operator=Operator.Contains})"></GridColumn>
+                    <GridColumn Field=@nameof(EasySalesServerRoles.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true"
+                                HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+                    <GridColumn HeaderText="Acciones">
+                        <GridCommandColumns>
+                            <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Agregar Rol", CssClass = "e-btn", IconCss="e-icons e-plus" })"></GridCommandColumn>
+                        </GridCommandColumns>
+                    </GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </Content>
+    </DialogTemplates>
+    <DialogButtons>
+        @* <DialogButton Content="OK" IsPrimary="true" OnClick="@OkClick" />
+        <DialogButton Content="Cancel" OnClick="@OkClick" />*@
+    </DialogButtons>
+    @*<DialogEvents OnOpen="@BeforeDialogOpen" Closed="@DialogClosed"></DialogEvents>*@
+</SfDialog>
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IRolesService? rolesService { get; set; }
+    public IEnumerable<EasySalesServerRoles> rolesActuales { get; set; }
+    public IEnumerable<EasySalesServerRoles> rolesDisponibles { get; set; }
+
+    [Inject]
+    public IUsersService? usersService { get; set; }
+    public EasySalesServerUser user { get; set; }
+
+    private bool SpinnerVisible { get; set; }
+    private SfGrid<EasySalesServerRoles>? rolesActualesGrid { get; set; }
+    private SfGrid<EasySalesServerRoles>? rolesDisponiblesGrid { get; set; }
+    private string FooterSaveButtonText { get; set; }
+
+    private List<ItemModel> Toolbaritems = new List<ItemModel>();
+    private string[] Tool = (new string[] { "Agregar Rol" });
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private bool IsDialogVisible { get; set; } = false;
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            this.SpinnerVisible = true;
+
+            Toolbaritems.Add(new ItemModel() { Text = "Agregar Rol", TooltipText = "Agregar", PrefixIcon = "e-expand" });
+            user = await usersService.ObtenerXId(this.Id);
+            rolesActuales = (await rolesService.ObtenerXUsuario(this.Id)).ToList();
+            rolesDisponibles = (await rolesService.CargarDatos()).ToList();
+            this.SpinnerVisible = false;
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    #region Eventos controles
+
+    public async Task ToolbarClickHandler(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (args.Item.Text == "Agregar Rol")
+        {
+            this.IsDialogVisible = true;
+        }
+    }
+
+    public async void OnCommandClicked(CommandClickEventArgs<EasySalesServerRoles> args)
+    {
+        try
+        {
+            if (args.CommandColumn.ButtonOption.Content == "Quitar Rol")
+            {
+                string rolId = args.RowData.Id;
+                string userId = this.user.Id;
+                await rolesService.EliminarRolUsuario(rolId, userId);
+                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+
+            if (args.CommandColumn.ButtonOption.Content == "Agregar Rol")
+            {
+                string rolId = args.RowData.Id;
+                string userId = this.user.Id;
+                var response = await rolesService.AgregarRolUsuario(rolId, userId);
+                this.IsDialogVisible = false;
+                this.rolesDisponibles = null;
+                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    #endregion
+
+}

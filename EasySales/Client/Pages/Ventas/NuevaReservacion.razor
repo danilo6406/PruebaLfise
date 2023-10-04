@@ -1,0 +1,374 @@
+﻿@page "/ventas/agregarreservacion"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using Microsoft.AspNetCore.Authorization
+@using System.ComponentModel.DataAnnotations
+
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider authenticationStateProvider
+
+@attribute [Authorize]
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: red;
+    }
+</style>
+
+@{
+    var SearchColumnsCliente = new string[] { "Nombre", "Numero Identificacion" };
+    var SearchColumnsProducto = new string[] { "Nombre", "Descripcion" };
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+}
+
+<PageTitle>Reservacion</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (guardandoReservacion)
+{
+    <p>Guardando reservación...</p>
+}
+else if (reservacionGuardada)
+{
+    <p>Reservación guardada exitosamente.</p>
+}
+else if (reservacion != null)
+{
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card mt-3 mb-3">
+                <div class="card-header">
+                    <h2>Nueva reservacion</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@reservacion" OnValidSubmit="GuardarReservacion" OnInvalidSubmit="FormInvalidSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group">
+                            <label>Seleccionar Cliente:</label>
+                            <SfButton OnClick="BuscarCliente" CssClass="e-info" Type="button">Buscar Cliente</SfButton>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cliente:</label>
+                            <SfTextBox Placeholder='Cliente' Readonly=true CssClass="form-control" @bind-Value="@reservacion.Cliente.Nombre"></SfTextBox>
+                            <ValidationMessage For="@(() => reservacion.Cliente.Nombre)" />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Seleccionar Producto:</label>
+                            <SfButton OnClick="BuscarProducto" CssClass="e-info" Type="button">Buscar Producto</SfButton>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Producto:</label>
+                            <SfTextBox Placeholder='Producto' Readonly=true CssClass="form-control" @bind-Value="@reservacion.Producto.Nombre"></SfTextBox>
+                            <ValidationMessage For="@(() => reservacion.Producto.Nombre)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Monto para la Reservación:</label>
+                            <SfNumericTextBox Format="c2" @bind-Value="@reservacion.MontoReservacion"
+                                              CssClass="form-control"></SfNumericTextBox>
+                            <ValidationMessage For="@(() => reservacion.MontoReservacion)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Fecha Reservación:</label>
+                            <InputDate @bind-Value="@reservacion.FechaReservacion" class="form-control" />
+                            <ValidationMessage For="@(() => reservacion.FechaReservacion)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Hora Inicio:</label>
+                            <input type="time" @bind="@reservacion.HoraInicio" class="form-control" />
+                            <ValidationMessage For="@(() => reservacion.HoraInicio)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Hora Fin:</label>
+                            <input type="time" @bind="@reservacion.HoraFin" class="form-control" />
+                            <ValidationMessage For="@(() => reservacion.HoraFin)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Observacion:</label>
+                            <textarea @bind="@reservacion.Observacion" class="form-control" />
+                            <ValidationMessage For="@(() => reservacion.Observacion)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Titulo Evento:</label>
+                            <textarea @bind="@reservacion.Titulo" class="form-control" />
+                            <ValidationMessage For="@(() => reservacion.Titulo)" />
+                        </div>
+
+                        <div class="form-group card-footer" align="right">
+                            <button type="submit" class="btn btn-success">Guardar</button>
+                            <button type="reset" @onclick=Cancelar class="btn btn-danger">Cancelar</button>
+                        </div>
+
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<SfDialog ShowCloseIcon="true" IsModal="true" @bind-Visible="@IsDialogClienteVisible">
+    <DialogTemplates>
+        <Header> Selecciona el cliente. </Header>
+        <Content>
+            <SfGrid @ref="clientesGrid" DataSource="@clientes" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+                    Toolbar="@(new List<string>() {"Search"})" TValue="Clientes">
+                <GridEvents TValue="Clientes" CommandClicked="OnCommandClienteClicked"></GridEvents>
+                <GridSearchSettings Fields="@SearchColumnsCliente"></GridSearchSettings>
+                <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.FilterBar"></GridFilterSettings>
+                <GridColumns>
+                    <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(Clientes.Id) HeaderText="ID"
+                                AllowFiltering=false></GridColumn>
+                    <GridColumn Field=@nameof(Clientes.Nombre) HeaderText="Nombre" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})">
+                    </GridColumn>
+                    <GridColumn Field="TipoIdentificacion.Nombre" HeaderText="Tipo Identificacion"
+                                FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})">
+                    </GridColumn>
+                    <GridColumn Field=@nameof(Clientes.NumeroIdentificacion) HeaderText="Numero Identificacion"></GridColumn>
+                    <GridColumn Field=@nameof(Clientes.NumeroTelefono) HeaderText="Telefono"></GridColumn>
+                    <GridColumn Field=@nameof(Clientes.Email) HeaderText="Correo" FilterSettings="@(new FilterSettings()
+                {Operator=Operator.Contains})"></GridColumn>
+                    <GridColumn HeaderText="Acciones">
+                        <GridCommandColumns>
+                            <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Seleccionar", CssClass = "e-btn", IconCss="e-icons e-plus" })"></GridCommandColumn>
+                        </GridCommandColumns>
+                    </GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </Content>
+    </DialogTemplates>
+    <DialogButtons>
+        <DialogButton Content="Agregar Cliente" IsPrimary="true" OnClick="@IrClientes" />
+    </DialogButtons>
+</SfDialog>
+
+<SfDialog ShowCloseIcon="true" IsModal="true" @bind-Visible="@IsDialogProductoVisible">
+    <DialogTemplates>
+        <Header> Selecciona el producto. </Header>
+        <Content>
+
+            <SfGrid @ref="productosGrid" DataSource="@productosDisponibles" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+                    Toolbar="@(new List<string>() {"Search"})" TValue="Productos">
+                <GridEvents TValue="Productos" CommandClicked="OnCommandProductoClicked"></GridEvents>
+                <GridSearchSettings Fields="@SearchColumnsProducto"></GridSearchSettings>
+                <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.FilterBar"></GridFilterSettings>
+                <GridColumns>
+                    <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(Productos.Id) HeaderText="ID Producto" AllowFiltering=false></GridColumn>
+                    <GridColumn Field=@nameof(Productos.Nombre) HeaderText="Nombre Producto" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(Productos.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="200"></GridColumn>
+                    <GridColumn Field=@nameof(Productos.PrecioVenta) HeaderText="P.Venta" Format="C2"></GridColumn>
+                    <GridColumn Field=@nameof(Productos.AplicaIVA) HeaderText="Iva" DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+                    <GridColumn Field=@nameof(Productos.EsServicio) HeaderText="Es Servicio" DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+                    <GridColumn Field="CategoriaProductos.Nombre" HeaderText="Categoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})">
+                    </GridColumn>
+                    <GridColumn Field="SubCategoriaProductos.Nombre" HeaderText="SubCategoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})">
+                    </GridColumn>
+                    <GridColumn HeaderText="Acciones">
+                        <GridCommandColumns>
+                            <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Seleccionar", CssClass = "e-btn", IconCss="e-icons e-plus" })"></GridCommandColumn>
+                        </GridCommandColumns>
+                    </GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </Content>
+    </DialogTemplates>
+</SfDialog>
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    IReservacionesService reservacionesService { get; set; }
+    public Reservaciones reservacion { get; set; }
+
+    [Inject]
+    public IClientesServices? clientesService { get; set; }
+    public Clientes cliente { get; set; }
+    public List<Clientes> clientes { get; set; }
+
+    [Inject]
+    public IProductosService productosService { get; set; }
+    public List<Productos> productosDisponibles { get; set; }
+    public Productos producto { get; set; }
+
+    private bool SpinnerVisible { get; set; }
+    private bool guardandoReservacion = false;
+    private bool reservacionGuardada = false;
+    private bool IsDialogClienteVisible { get; set; } = false;
+    private bool IsDialogProductoVisible { get; set; } = false;
+
+
+    private SfGrid<Clientes>? clientesGrid { get; set; }
+    private SfGrid<Productos>? productosGrid { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        this.reservacion = new Reservaciones();
+        this.reservacion.FechaReservacion = DateTime.Now;
+        this.cliente = new Clientes();
+        this.producto = new Productos();
+        this.reservacion.Cliente = cliente;
+        this.reservacion.Producto = producto;
+        this.SpinnerVisible = false;
+    }
+
+    #region Eventos Controles
+
+    private async void GuardarReservacion()
+    {
+        this.guardandoReservacion = true;
+        this.reservacion.ProductoId = producto.Id;
+        this.reservacion.ClienteId = cliente.Id;
+
+        if (this.reservacion.Titulo == "" | this.reservacion.Titulo==null)
+        {
+            this.reservacion.Titulo = cliente.Nombre + " - " + producto.Nombre;
+        }
+
+        TimeSpan timeSpan = this.reservacion.HoraFin.Subtract(this.reservacion.HoraInicio);
+        this.reservacion.CantidadHoras = timeSpan.Hours;
+        var reservacionExistente = await reservacionesService.VerificarDisponibilidad(this.reservacion);
+        if (reservacionExistente.Id != 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Ya existe la reservacion numero: {reservacionExistente.Id} en esa fecha para el cliente {reservacionExistente.Cliente.Nombre} con conflicto en ese horario.");// Alert
+            this.guardandoReservacion = false;
+            NavManager.NavigateTo("/ventas/reservaciones", forceLoad: true);
+            return;
+        }
+        var nuevaReservacion = await reservacionesService.Agregar(this.reservacion);
+        if (nuevaReservacion.Id != 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Reservacion guardada con exito.");// Alert
+            this.guardandoReservacion = false;
+            this.reservacionGuardada = true;
+            NavManager.NavigateTo("/ventas/reservaciones", forceLoad: true);
+        }
+    }
+
+    private void FormInvalidSubmit(EditContext context)
+    {
+        try
+        {
+            Console.WriteLine("Informacion no valida, por favor revise los datos.");
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine("Error: {Error}", ex.Message);
+        }
+    }
+
+    private async Task BuscarCliente()
+    {
+        try
+        {
+            this.SpinnerVisible = true;
+            this.clientes = (await clientesService.CargarDatos()).ToList();
+            this.IsDialogClienteVisible = true;
+            this.SpinnerVisible = false;
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    private async Task BuscarProducto()
+    {
+        try
+        {
+            this.SpinnerVisible = true;
+            this.productosDisponibles = (await productosService.CargarProductosReservas()).ToList();
+            this.IsDialogProductoVisible = true;
+            this.SpinnerVisible = false;
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    private void IrClientes()
+    {
+        try
+        {
+            NavManager.NavigateTo("/CRM/Clientes/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    public async Task OnCommandClienteClicked(CommandClickEventArgs<Clientes> args)
+    {
+        try
+        {
+            if (args.CommandColumn.ButtonOption.Content == "Seleccionar")
+            {
+                this.cliente = await clientesService.ObtenerXId(args.RowData.Id);
+                this.IsDialogClienteVisible = false;
+                this.reservacion.Cliente = cliente;
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    public async Task OnCommandProductoClicked(CommandClickEventArgs<Productos> args)
+    {
+        try
+        {
+            if (args.CommandColumn.ButtonOption.Content == "Seleccionar")
+            {
+                this.producto = await productosService.ObtenerProductoXId(args.RowData.Id);
+                this.IsDialogProductoVisible = false;
+                this.reservacion.Producto = producto;
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    private void Cancelar()
+    {
+        NavManager.NavigateTo("/ventas/reservaciones/");
+    }
+
+    #endregion
+}
+
+
+
+
+
+
+

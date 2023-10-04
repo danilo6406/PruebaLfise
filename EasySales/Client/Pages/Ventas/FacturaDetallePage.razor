@@ -1,0 +1,151 @@
+﻿@page "/facturas/detalle/{FacturaId:long}"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Http
+
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+@attribute [Authorize]
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: green;
+    }
+</style>
+
+<PageTitle>Detalles</PageTitle>
+
+<h3>Detalles de factura</h3>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (factura != null)
+{
+    <div class="card m-3" style="min-width: 18rem; ">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-6">
+                    <h3>No. Factura: @factura.Id </h3>
+                    <h3>Fecha: @factura.Fecha.ToShortDateString() </h3>
+                </div>
+                <div class="col-6">
+                    <h3>Cliente: @factura.Cliente.Nombre </h3>
+                    <h3>Estado: @factura.EstadoFactura.Nombre </h3>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (facturaDetalle != null)
+            {
+                var SearchColumns = new string[] { "Numero", "Fecha" };
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                <SfGrid @ref="facturaDetallesGrid" DataSource="@facturaDetalle" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+                        TValue="FacturaDetalle">
+                    <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+                    <GridPageSettings PageSize="10"></GridPageSettings>
+                    <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.FilterBar"></GridFilterSettings>
+                    <GridColumns>
+                        <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(FacturaDetalle.Id) HeaderText="Id" AllowFiltering=true></GridColumn>
+                        <GridColumn Field=Producto.Nombre HeaderText="Producto" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+                        <GridColumn Field=@nameof(FacturaDetalle.Cantidad) HeaderText="Cantidad" Type="ColumnType.Number"></GridColumn>
+                        <GridColumn Field=@nameof(FacturaDetalle.Impuestos) HeaderText="Impuestos" Format="C2"></GridColumn>
+                        <GridColumn Field=@nameof(FacturaDetalle.Subtotal) HeaderText="Sub Total" Format="C2"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            }
+            <div class="text-end mt-2">
+                <h3>Subtotal: @factura.Subtotal </h3>
+                <h3>Impuestos: @factura.Impuestos </h3>
+                <h3>Total: @factura.Total</h3>
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <button class="btn btn-danger m-1" @onclick="Anular">Anular</button>
+            <a href="/ventas/facturas" class="btn btn-primary m-1">Volver</a>
+        </div>
+    </div>
+}
+
+<SfDialog Width="250px" ShowCloseIcon="true" IsModal="true" @bind-Visible="@IsDialogVisible">
+    <DialogTemplates>
+        <Header> Anulacion de factura </Header>
+        <Content> Esta seguro para anular la factura? </Content>
+    </DialogTemplates>
+    <DialogButtons>
+        <DialogButton Content="Confirmar" IsPrimary="true" OnClick="@OkClick" />
+        <DialogButton Content="Cancelar" OnClick="@CancelClick" />
+    </DialogButtons>
+    @*<span id="message">@ClickStatus</span>*@
+</SfDialog>
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IFacturasService facturasService { get; set; }
+    public Facturas factura { get; set; }
+    public IEnumerable<FacturaDetalle> facturaDetalle { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    private bool IsDialogVisible { get; set; } = false;
+    public SfGrid<FacturaDetalle>? facturaDetallesGrid { get; set; }
+
+    [Parameter]
+    public long FacturaId { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        this.factura = await facturasService.ObtenerXId(this.FacturaId);
+        this.facturaDetalle = await facturasService.CargarDetalleFactura(this.FacturaId);
+        this.SpinnerVisible = false;
+    }
+
+    #region Controles
+
+    private void Anular()
+    {
+        this.IsDialogVisible = true;
+    }
+
+    private void CancelClick()
+    {
+        this.IsDialogVisible = false;
+    }
+
+    private async void OkClick()
+    {
+        try
+        {
+            this.IsDialogVisible = false;
+            Facturas facturaAnulada = new();
+            facturaAnulada = await facturasService.Anular(this.factura);
+            if (facturaAnulada.EstadoFacturaId == 2)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Factura anulada con exito.");// Alert
+                NavManager.NavigateTo("/ventas/facturas/");
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "No se pudo anular la factura, contactar con soporte por favor.");// Alert                
+            }
+        }
+        catch (Exception)
+        {
+            
+            throw;
+        }
+       
+    }
+
+    #endregion
+
+}

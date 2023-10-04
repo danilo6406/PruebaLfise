@@ -1,0 +1,143 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property._SupportedPlatformList = browser
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = true
+build_property.IncludeAllContentForSelfExtract = 
+build_property.RootNamespace = EasySales.Client
+build_property.RootNamespace = EasySales.Client
+build_property.ProjectDir = C:\Users\Danilo\Desktop\EasySales\EasySales\Client\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\Danilo\Desktop\EasySales\EasySales\Client
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/CategoriaProductos/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2F0ZWdvcmlhUHJvZHVjdG9zXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Comun/TipoIdentificacion.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tdW5cVGlwb0lkZW50aWZpY2FjaW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Counter.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/CRM/Clientes/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ1JNXENsaWVudGVzXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/FetchData.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmV0Y2hEYXRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Inventario/BodegasPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW52ZW50YXJpb1xCb2RlZ2FzUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Logout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9nb3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Productos/Edit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdG9zXEVkaXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Productos/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdG9zXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Productos/SearchProductos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdG9zXFNlYXJjaFByb2R1Y3Rvcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Sistema/ParametrosSistema.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lzdGVtYVxQYXJhbWV0cm9zU2lzdGVtYS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Sistema/Roles/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lzdGVtYVxSb2xlc1xJbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Sistema/Roles/UsuarioRoles.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lzdGVtYVxSb2xlc1xVc3VhcmlvUm9sZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Sistema/Usuarios/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lzdGVtYVxVc3Vhcmlvc1xJbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/SubCategoriaProductos/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3ViQ2F0ZWdvcmlhUHJvZHVjdG9zXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/EditAppointmentPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXEVkaXRBcHBvaW50bWVudFBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/FacturaDetallePage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXEZhY3R1cmFEZXRhbGxlUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/FacturaRecibo.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXEZhY3R1cmFSZWNpYm8ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/FacturasPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXEZhY3R1cmFzUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/NuevaReservacion.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXE51ZXZhUmVzZXJ2YWNpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Pages/Ventas/Reservas.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzXFJlc2VydmFzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Shared/LoginDisplay.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvZ2luRGlzcGxheS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Shared/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFJlZGlyZWN0VG9Mb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-mt1e0jyghz
+
+[C:/Users/Danilo/Desktop/EasySales/EasySales/Client/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-uai0la8a4z

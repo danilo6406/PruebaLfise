@@ -1,0 +1,152 @@
+﻿@page "/CRM/Clientes/"
+@using EasySales.Client.Services
+@using EasySales.Shared
+
+<h3>Clientes</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Clientes</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (clientes != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Numero Identificacion" };
+
+    <SfGrid @ref="clientesGrid" DataSource="@clientes" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="Clientes">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as Clientes)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="Clientes"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(Clientes.Id) HeaderText="ID"
+                        AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(Clientes.Nombre) HeaderText="Nombre" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})">
+            </GridColumn>
+            <GridColumn Field="TipoIdentificacion.Nombre" HeaderText="Tipo Identificacion"
+                        FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})">
+                <EditTemplate>
+                    <SfDropDownList ID="ddlTipoIdentificacion" DataSource="@tipoIdentificacion" TItem="TipoIdentificacion" TValue="int"
+                    @bind-Value="@((context as Clientes).TipoIdentificacion.Id)">
+                        <DropDownListFieldSettings Text="Nombre" Value="Id"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </EditTemplate>
+            </GridColumn>
+            <GridColumn Field=@nameof(Clientes.NumeroIdentificacion) HeaderText="Numero Identificacion"></GridColumn>
+            <GridColumn Field=@nameof(Clientes.NumeroTelefono) HeaderText="Telefono"></GridColumn>
+            <GridColumn Field=@nameof(Clientes.Email) HeaderText="Correo" FilterSettings="@(new FilterSettings()
+                {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(Clientes.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true"
+                        HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(Clientes.FechaCreacion) Visible="false" HeaderText="Fecha Creacion" DefaultValue="@DateTime.Now"
+                        EditType="EditType.DateTimePickerEdit"></GridColumn>
+            <GridColumn Field=@nameof(Clientes.UsuarioCreacion) Visible="false" HeaderText="Usuario Creacion" DefaultValue="@defaultUser">
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IClientesServices? clientesService { get; set; }
+    public IEnumerable<Clientes> clientes { get; set; }
+
+    [Inject]
+    public ITipoIdentificacionService tipoIdentificacionService { get; set; }
+    public IEnumerable<TipoIdentificacion>? tipoIdentificacion { get; set; }
+
+    private bool SpinnerVisible { get; set; }
+    private SfGrid<Clientes>? clientesGrid { get; set; }
+    private string defaultUser = "Sistema";
+    private string FooterSaveButtonText { get; set; }
+
+    #endregion
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            this.SpinnerVisible = true;
+            clientes = (await clientesService.CargarDatos()).ToList();
+            tipoIdentificacion = (await tipoIdentificacionService.CargarDatos()).ToList();
+            this.SpinnerVisible = false;
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    #region Eventos Controles
+
+    public async void ActionBeginHandler(ActionEventArgs<Clientes> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Add")
+            {
+                await clientesService.Agregar(Args.Data);
+                clientes = (await clientesService.CargarDatos()).ToList();
+                clientesGrid.Refresh();
+            }
+            else
+            {
+                await clientesService.Modificar(Args.Data);
+                clientes = (await clientesService.CargarDatos()).ToList();
+                clientesGrid.Refresh();
+            }
+        }
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            await clientesService.Eliminar(Args.Data.Id);
+        }
+    }
+
+    public string GetDialogHeader(Clientes clientes)
+    {
+        if (clientes.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {clientes.Nombre} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        await clientesGrid.CloseEditAsync();
+    }
+
+    public async Task Save()
+    {
+        await clientesGrid.EndEditAsync();
+    }
+
+    #endregion
+
+}

@@ -1,0 +1,116 @@
+﻿@page "/comun/tipoidentificacion"
+@using EasySales.Client.Services
+@using EasySales.Shared
+
+<h3>Tipo Identificacion</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Tipo Identificacion</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (tipoIdentificacion != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Descripcion" };
+
+    <SfGrid @ref="tipoIdentificacionGrid" DataSource="@tipoIdentificacion" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="EasySales.Shared.TipoIdentificacion">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as EasySales.Shared.TipoIdentificacion)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="EasySales.Shared.TipoIdentificacion"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(EasySales.Shared.TipoIdentificacion.Id) HeaderText="ID" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.TipoIdentificacion.Nombre) HeaderText="Nombre" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.TipoIdentificacion.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.TipoIdentificacion.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.TipoIdentificacion.FechaCreacion) Visible="false" HeaderText="Fecha Creacion" DefaultValue="@DateTime.Now" EditType="EditType.DateTimePickerEdit"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.TipoIdentificacion.UsuarioCreacion) Visible="false" HeaderText="Usuario Creacion" DefaultValue="@defaultUser"></GridColumn>
+            <GridColumn Field=@nameof(EasySales.Shared.TipoIdentificacion.EmpresaId) Visible="false" HeaderText="Empresa" DefaultValue="@(2)"></GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public ITipoIdentificacionService tipoIdentificacionService { get; set; }
+    public IEnumerable<EasySales.Shared.TipoIdentificacion> tipoIdentificacion { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    public SfGrid<EasySales.Shared.TipoIdentificacion>? tipoIdentificacionGrid { get; set; }
+    public string defaultUser = "Sitema";
+    public string FooterSaveButtonText { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        tipoIdentificacion = (await tipoIdentificacionService.CargarDatos()).ToList();
+        this.SpinnerVisible = false;
+    }
+
+    public async void ActionBeginHandler(ActionEventArgs<EasySales.Shared.TipoIdentificacion> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Add")
+            {
+                await tipoIdentificacionService.Agregar(Args.Data);
+                tipoIdentificacion = (await tipoIdentificacionService.CargarDatos()).ToList();
+                tipoIdentificacionGrid.Refresh();
+            }
+            else
+            {
+                await tipoIdentificacionService.Modificar(Args.Data);
+            }
+        }
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            await tipoIdentificacionService.Eliminar(Args.Data.Id);
+        }
+    }
+
+    public string GetDialogHeader(EasySales.Shared.TipoIdentificacion tipoIdentificacion)
+    {
+        if (tipoIdentificacion.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {tipoIdentificacion.Nombre} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        await tipoIdentificacionGrid.CloseEditAsync();
+    }
+
+    public async Task Save()
+    {
+        await tipoIdentificacionGrid.EndEditAsync();
+    }
+
+}

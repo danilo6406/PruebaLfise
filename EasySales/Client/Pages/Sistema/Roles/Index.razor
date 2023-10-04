@@ -1,0 +1,145 @@
+﻿@page "/Sistema/Roles/"
+@using EasySales.Client.Services;
+@using EasySales.Shared
+@using Microsoft.AspNetCore.Authorization;
+
+@attribute [Authorize(Roles = "Admin")]
+
+<h3>Roles de usuario</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Roles</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (roles != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Codigo" };
+
+    <SfGrid @ref="rolesGrid" DataSource="@roles" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="EasySalesServerRoles">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as EasySalesServerRoles)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="EasySalesServerRoles"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(EasySalesServerRoles.Id) HeaderText="ID"
+                        AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(EasySalesServerRoles.Name) HeaderText="Nombre" FilterSettings="@(new FilterSettings()
+                        {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySalesServerRoles.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings()
+                        {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySalesServerRoles.Codigo) HeaderText="Codigo" FilterSettings="@(new FilterSettings()
+                {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(EasySalesServerRoles.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true"
+                        HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+
+@code {
+    #region Variables
+
+    [Inject]
+    public IRolesService? rolesService { get; set; }
+    public IEnumerable<EasySalesServerRoles> roles { get; set; }
+
+    private bool SpinnerVisible { get; set; }
+    private SfGrid<EasySalesServerRoles>? rolesGrid { get; set; }
+    private string FooterSaveButtonText { get; set; }
+
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            this.SpinnerVisible = true;
+            roles = (await rolesService.CargarDatos()).ToList();
+            this.SpinnerVisible = false;
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+
+    #region Eventos Controles
+
+    public async void ActionBeginHandler(ActionEventArgs<EasySalesServerRoles> Args)
+    {
+       try
+        {
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+            {
+                if (Args.Action == "Add")
+                {
+                    await rolesService.Agregar(Args.Data);
+                    roles = (await rolesService.CargarDatos()).ToList();
+                    rolesGrid.Refresh();
+                }
+                else
+                {
+                    await rolesService.Modificar(Args.Data);
+                    roles = (await rolesService.CargarDatos()).ToList();
+                    rolesGrid.Refresh();
+                }
+            }
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+            {
+                await rolesService.Eliminar(Args.Data.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            
+            throw;
+        }
+    }
+
+
+    public string GetDialogHeader(EasySalesServerRoles roles)
+    {
+        if (roles.Id == "")
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {roles.Name} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        await rolesGrid.CloseEditAsync();
+    }
+
+    public async Task Save()
+    {
+        await rolesGrid.EndEditAsync();
+    }
+
+    #endregion
+}

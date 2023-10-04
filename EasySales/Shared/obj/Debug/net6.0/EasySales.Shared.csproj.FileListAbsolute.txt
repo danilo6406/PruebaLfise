@@ -1,0 +1,12 @@
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\bin\Debug\net6.0\EasySales.Shared.deps.json
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\bin\Debug\net6.0\EasySales.Shared.dll
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\bin\Debug\net6.0\EasySales.Shared.pdb
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.csproj.AssemblyReference.cache
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.AssemblyInfoInputs.cache
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.AssemblyInfo.cs
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.csproj.CoreCompileInputs.cache
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.dll
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\refint\EasySales.Shared.dll
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\EasySales.Shared.pdb
+C:\Users\danilo.chavarria\source\repos\EasySales\EasySales\Shared\obj\Debug\net6.0\ref\EasySales.Shared.dll

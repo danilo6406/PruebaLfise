@@ -1,0 +1,465 @@
+﻿@page "/ventas"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using EasySales.Shared.ViewModels
+@using Syncfusion.Blazor.Inputs
+@using Microsoft.AspNetCore.Authorization
+@using System.Text.Json;
+@using System.Text;
+
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+
+@attribute [Authorize]
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: red;
+    }
+</style>
+
+<PageTitle>Ventas</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5"
+           @bind-Visible="SpinnerVisible"></SfSpinner>
+
+<h3>Ventas</h3>
+<br />
+
+@*Clientes*@
+<h4>Clientes</h4>
+<div class="mb-3">
+    <SfDropDownList TValue="long" TItem="Clientes" Placeholder="Seleccione el cliente" DataSource="@clientes"
+                    @bind-Value="IdClienteGenerico" AllowFiltering="true">
+        <DropDownListFieldSettings Value="Id" Text="Nombre"></DropDownListFieldSettings>
+        <DropDownListEvents TValue="long" TItem="Clientes" ValueChange="OnValueChange"></DropDownListEvents>
+    </SfDropDownList>
+</div>
+
+
+@*Grids*@
+@if (productosDisponibles != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Descripcion" };
+
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+    @*CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");*@
+    <SfGrid @ref="productosDisponiblesGrid" DataSource="@productosDisponibles" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() {"Search"})" TValue="ProductosDisponibles" Width="100%">
+        <GridEvents TValue="ProductosDisponibles" CommandClicked="AgregarClicked"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(ProductosDisponibles.Id) HeaderText="ID Producto" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(ProductosDisponibles.Nombre) HeaderText="Nombre Producto" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="150"></GridColumn>
+            <GridColumn Field=@nameof(ProductosDisponibles.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="200"></GridColumn>
+            <GridColumn Field=@nameof(ProductosDisponibles.PrecioVenta) HeaderText="P.Venta" Format="C2" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(ProductosDisponibles.Cantidad) HeaderText="Cantidad" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(ProductosDisponibles.AplicaIVA) HeaderText="Iva" AllowFiltering=false DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(ProductosDisponibles.EsServicio) HeaderText="Es Servicio" AllowFiltering=false DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn HeaderText="Acciones">
+                <GridCommandColumns>
+                    <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Añadir", CssClass = "e-flat", IconCss="e-icons e-add" })"></GridCommandColumn>
+                </GridCommandColumns>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+
+    <br />
+    <h4>Productos Disponibles</h4>
+    <br />
+    @if (productosSeleccionados != null)
+    {
+        <h4>Productos Seleccionados</h4>
+        <div style="width: calc(100vw -5rem);" class="mb-3">
+            <SfGrid @ref="productosSeleccionadosGrid" DataSource="@productosSeleccionados" AllowPaging=false AllowSorting=true AllowMultiSorting=false AllowFiltering=false
+                    TValue="VentaProductos" Width="100%">
+                <GridEvents TValue="VentaProductos" CommandClicked="QuitarClicked"></GridEvents>
+                <GridFilterSettings Mode="FilterBarMode.Immediate"></GridFilterSettings>
+                <GridEditSettings AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal"></GridEditSettings>
+                <GridColumns>
+                    <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(VentaProductos.Id) HeaderText="ID Producto" AllowFiltering=false></GridColumn>
+                    <GridColumn Field=@nameof(VentaProductos.Nombre) HeaderText="Nombre Producto" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(VentaProductos.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="200"></GridColumn>
+                    <GridColumn Field=@nameof(VentaProductos.PrecioVenta) HeaderText="P. Unitario" Format="C2"></GridColumn>
+                    <GridColumn Field=@nameof(VentaProductos.AplicaIVA) HeaderText="Iva" DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+                    <GridColumn Field=@nameof(VentaProductos.EsServicio) HeaderText="Es Servicio" DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+                    <GridColumn Field=@nameof(VentaProductos.Cantidad) HeaderText="Cantidad" Type="ColumnType.Number"></GridColumn>
+                    <GridColumn HeaderText="Acciones">
+                        <GridCommandColumns>
+                            <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Quitar", CssClass = "e-flat", IconCss="e-icons e-delete" })"></GridCommandColumn>
+                        </GridCommandColumns>
+                    </GridColumn>
+                </GridColumns>
+                <GridAggregates>
+                    <GridAggregate>
+                        <GridAggregateColumns>
+                            <GridAggregateColumn Field=@nameof(VentaProductos.PrecioVenta) Type="AggregateType.Sum" Format="C2">
+                                <FooterTemplate>
+                                    @{
+                                        //var aggregate = (context as AggregateTemplateContext);
+                                        //<p>Subtotal: @aggregate.Sum</p>
+                                        <div class="d-flex flex-row-reverse">
+                                            <p>Subtotal: @CalcularMontos().ToString("C2")</p>
+                                        </div>
+                                    }
+                                </FooterTemplate>
+                            </GridAggregateColumn>
+                        </GridAggregateColumns>
+                    </GridAggregate>
+                    <GridAggregate>
+                        <GridAggregateColumns>
+                            <GridAggregateColumn Field=@nameof(VentaProductos.PrecioVenta) Type="AggregateType.Custom" Format="C2">
+                                <FooterTemplate>
+                                    @{
+                                        //var aggregate = (context as AggregateTemplateContext);
+                                        Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                                        <div class="d-flex flex-row-reverse">
+                                            <p>I.V.A: @ValorIva.ToString("C2")</p>
+                                        </div>
+                                    }
+                                </FooterTemplate>
+                            </GridAggregateColumn>
+                        </GridAggregateColumns>
+                    </GridAggregate>
+                    <GridAggregate>
+                        <GridAggregateColumns>
+                            <GridAggregateColumn Field=@nameof(VentaProductos.PrecioVenta) Type="AggregateType.Custom" Format="C2">
+                                <FooterTemplate>
+                                    @{
+                                        //var aggregate = (context as AggregateTemplateContext);
+                                        Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                                        <div class="d-flex flex-row-reverse">
+                                            <p>Total: @ValorTotal.ToString("C2")</p>
+                                        </div>
+                                    }
+                                </FooterTemplate>
+                            </GridAggregateColumn>
+                        </GridAggregateColumns>
+                    </GridAggregate>
+                </GridAggregates>
+            </SfGrid>
+        </div>
+    }
+
+
+}
+
+@*Botones*@
+<div class="row mb-3">
+    <div class="d-flex justify-content-end">
+        @if (productosSeleccionados.Count > 0)
+        {
+            <SfButton Content="Aplicar" CssClass="e-success" IconCss="e-icons e-check-large" OnClick="AplicarVenta"></SfButton>
+        }
+        <SfButton Content="Cancelar" CssClass="e-danger" IconCss="e-icons e-circle-remove" OnClick="CancelarVenta"></SfButton>
+    </div>
+</div>
+
+@*Dialogo popup*@
+<SfDialog Width="250px" ShowCloseIcon="true" IsModal="true" @bind-Visible="@IsVisible">
+    <DialogTemplates>
+        <Header> Cantidad de producto. </Header>
+        <Content>
+            <SfTextBox ID="inVal" @bind-Value="@TextBoxValue" @ref="TextboxObj" Type="InputType.Number" Placeholder="Ingrese la cantidad" />
+        </Content>
+    </DialogTemplates>
+    <DialogButtons>
+        <DialogButton Content="OK" IsPrimary="true" OnClick="@OkClick" />
+        <DialogButton Content="Cancelar" OnClick="@OkClick" />
+    </DialogButtons>
+    <DialogEvents OnOpen="@BeforeDialogOpen" Closed="@DialogClosed"></DialogEvents>
+</SfDialog>
+
+@code {
+
+    #region Variables
+
+    public bool SpinnerVisible { get; set; }
+    public SfGrid<ProductosDisponibles>? productosDisponiblesGrid { get; set; }
+    public SfGrid<VentaProductos>? productosSeleccionadosGrid { get; set; }
+
+    [Inject]
+    public IVentasService? ventasService { get; set; }
+
+    [Inject]
+    public IProductosService? ProductosService { get; set; }
+    public List<ProductosDisponibles>? productosDisponibles { get; set; }
+    public List<VentaProductos>? productosSeleccionados { get; set; } = new();
+
+    [Inject]
+    public IClientesServices? clientesServices { get; set; }
+    public List<Clientes> clientes { get; set; }
+
+    [Inject]
+    public IEncryptionService? encryptionService { get; set; }
+
+    [Inject]
+    public IParametrosSistemaService? parametrosSistemaService { get; set; }
+    public ParametrosSistema paramUsoCantidadInventario { get; set; }
+    public ParametrosSistema paramValorIva { get; set; }
+
+    CommandClickEventArgs<ProductosDisponibles> argProductoSel { get; set; }
+
+    SfTextBox? TextboxObj;
+    private string TextBoxValue;
+    private decimal ValorSubTotal { get; set; }
+    private decimal ValorTotal { get; set; }
+    private decimal ValorIva { get; set; }
+    private bool IsVisible { get; set; } = false;
+    private long IdClienteSeleccionado { get; set; }
+    private long IdClienteGenerico { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            this.SpinnerVisible = true;
+            productosDisponibles = (await ProductosService.CargarProductosVentas()).ToList();
+            this.IdClienteGenerico = 1;
+            this.paramUsoCantidadInventario = await parametrosSistemaService.ObtenerXNombre("UtilizaInventario");
+            this.paramValorIva = await parametrosSistemaService.ObtenerXNombre("ValorImpuestoIVA");
+            clientes = (await clientesServices.CargarDatos()).ToList();
+            this.SpinnerVisible = false;
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+
+    }
+
+    #region Eventos Controles
+
+    public async void AgregarClicked(CommandClickEventArgs<ProductosDisponibles> args)
+    {
+        this.argProductoSel = args;
+        this.IsVisible = true; //Abre el dialogo
+    }
+
+    public void QuitarClicked(CommandClickEventArgs<VentaProductos> args)
+    {
+        if (args.CommandColumn.ButtonOption.Content == "Quitar")
+        {
+            try
+            {
+                VentaProductos productoSel = args.RowData;
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                productosDisponiblesGrid.Refresh();
+                this.productosSeleccionados.Remove(productoSel);
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                productosSeleccionadosGrid.Refresh();
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+    }
+
+    private async void OkClick()
+    {
+
+        this.IsVisible = false;
+        CommandClickEventArgs<ProductosDisponibles> args = this.argProductoSel;
+        if (args.CommandColumn.ButtonOption.Content == "Añadir")
+        {
+            try
+            {
+                Productos productoSel = args.RowData;
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                int cantidadProd = 0;
+                decimal impuesto = 0;
+                decimal subtotalDetalle = 0;
+
+                productosDisponiblesGrid.Refresh();
+
+                if (this.TextBoxValue == "")
+                {
+                    return;
+                }
+                else
+                {
+                    cantidadProd = Convert.ToInt32(this.TextBoxValue);
+
+                    if (args.RowData.EsServicio == false)
+                    {
+                        if (Convert.ToInt32(this.paramUsoCantidadInventario.ValorNumerico) == 1)
+                        {
+                            if (cantidadProd > args.RowData.Cantidad)
+                            {
+                                await JsRuntime.InvokeVoidAsync("alert", "Cantidad seleccionada mayor a lo existente en inventario.");// Alert
+                                return;
+                            }
+                        }
+                    }
+
+
+                    if (productoSel.AplicaIVA == true)
+                    {
+                        decimal ValorIva = this.paramValorIva.ValorNumerico ?? 0.0M;
+                        impuesto = decimal.Round((productoSel.PrecioVenta * ValorIva), 2);
+                    }
+                    subtotalDetalle = (productoSel.PrecioVenta * cantidadProd);
+                    VentaProductos venta = new()
+                        {
+                            Id = productoSel.Id,
+                            Empresa = productoSel.Empresa,
+                            EmpresaId = productoSel.EmpresaId,
+                            Nombre = productoSel.Nombre,
+                            Descripcion = productoSel.Descripcion,
+                            PrecioVenta = productoSel.PrecioVenta,
+                            PrecioCosto = productoSel.PrecioCosto,
+                            EsServicio = productoSel.EsServicio,
+                            AplicaIVA = productoSel.AplicaIVA,
+                            Activo = productoSel.Activo,
+                            CategoriaProductos = productoSel.CategoriaProductos,
+                            CategoriaProductosId = productoSel.CategoriaProductosId,
+                            SubCategoriaProductos = productoSel.SubCategoriaProductos,
+                            SubCategoriaProductosId = productoSel.SubCategoriaProductosId,
+                            FotoPath = productoSel.FotoPath,
+                            UsuarioCreacion = productoSel.UsuarioCreacion,
+                            FechaCreacion = productoSel.FechaCreacion,
+                            FechaModificacion = productoSel.FechaModificacion,
+                            UsuarioModificacion = productoSel.UsuarioModificacion,
+                            TipoModificacion = productoSel.TipoModificacion,
+                            TipoModificacionId = productoSel.TipoModificacionId,
+                            Cantidad = cantidadProd,
+                            Subtotal = decimal.Round(subtotalDetalle, 2),
+                            Impuesto = impuesto,
+                            TotalDetalle = subtotalDetalle + impuesto
+                        };
+
+                    this.productosSeleccionados.Add(venta);
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+                    this.productosSeleccionadosGrid.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+    }
+
+    private void BeforeDialogOpen(Syncfusion.Blazor.Popups.BeforeOpenEventArgs args)
+    {
+    }
+
+    private void DialogClosed(CloseEventArgs args)
+    {
+        this.argProductoSel = null;
+        this.TextBoxValue = string.Empty;
+    }
+
+    public void OnValueChange(ChangeEventArgs<long, Clientes> args)
+    {
+        try
+        {
+            this.IdClienteSeleccionado = args.Value;
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    #endregion
+
+    #region Metodos
+
+    public decimal CalcularMontos()
+    {
+        try
+        {
+            decimal Iva = 0.15M;
+            string respuestaIvaString = Queryable.Sum(productosSeleccionados.Where(x => x.AplicaIVA == true).Select(x => (x.PrecioVenta * Iva * x.Cantidad)).AsQueryable()).ToString();
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+            decimal RespuestaIvaDecimal = Convert.ToDecimal(respuestaIvaString);
+            string respuestaSubTotalString = Queryable.Sum(productosSeleccionados.Select(x => (x.PrecioVenta * x.Cantidad)).AsQueryable()).ToString();
+            decimal RespuestaSubTotalDecimal = Convert.ToDecimal(respuestaSubTotalString);
+            this.ValorTotal = decimal.Round((RespuestaSubTotalDecimal + RespuestaIvaDecimal), 2);
+            this.ValorIva = decimal.Round(RespuestaIvaDecimal, 2);
+            this.ValorSubTotal = decimal.Round(RespuestaSubTotalDecimal, 2);
+            return ValorSubTotal;
+
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    private async Task AplicarVenta()
+    {
+        try
+        {
+            if (this.productosDisponibles.Count < 1)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "No tiene productos seleccionados para la venta.");// Alert
+            }
+            else
+            {
+                Facturas factura = new();
+                factura.ClienteId = this.IdClienteSeleccionado;
+                factura.Subtotal = this.ValorSubTotal;
+                factura.Impuestos = this.ValorIva;
+                factura.Total = this.ValorTotal;
+                var dictionary = new Dictionary<string, object>
+                            {
+                                {"FacturaInfo",factura},
+                                {"ProductosSeleccionados", this.productosSeleccionados}
+                            };
+
+                var response = await ventasService.Agregar(dictionary);
+                if (response != null)
+                {
+                    ResetForm();
+                    await JsRuntime.InvokeVoidAsync("alert", "Venta ingresada con exito.");// Alert
+
+                    string encryptedParameter = await encryptionService.Encrypt(response.Id.ToString());
+
+                    // Generate the URL with the encrypted parameter
+                    string targetUrl = $"/ventas/facturarecibo/{Uri.EscapeDataString(encryptedParameter)}";
+                    NavManager.NavigateTo(targetUrl);
+                    //NavManager.NavigateTo($"/ventas/facturarecibo/{response.Id}", true);
+                }
+                else
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "No se pudo aplicar la venta, por favor contactar a soporte.");// Alert
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "No se pudo aplicar la venta, por favor contactar a soporte. Error: "
+                                                        + ex.Message.ToString());// Alert
+            throw;
+        }
+    }
+
+    private void CancelarVenta()
+    {
+        ResetForm();
+        NavManager.NavigateTo("");
+    }
+
+    private void ResetForm()
+    {
+        this.argProductoSel = null;
+        this.productosSeleccionadosGrid.Refresh();
+    }
+
+    #endregion
+
+}

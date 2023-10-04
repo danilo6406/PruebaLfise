@@ -1,0 +1,82 @@
+﻿@page "/ventas/facturas"
+@using EasySales.Client.Services
+@using EasySales.Shared
+
+@inject NavigationManager NavManager
+
+<h3>Facturas</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Facturas</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (facturas != null)
+{
+    var SearchColumns = new string[] { "Numero", "Fecha" };
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+    <SfGrid @ref="facturasGrid" DataSource="@facturas" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+             TValue="Facturas">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+        </GridEditSettings>
+        <GridEvents CommandClicked="OnCommandClicked" TValue="Facturas"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="30"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.FilterBar"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=true AllowAdding=false IsPrimaryKey=true Visible="true" Field=@nameof(Facturas.Id) HeaderText="Numero" AllowFiltering=true></GridColumn>
+            <GridColumn Field=@nameof(Facturas.Fecha) HeaderText="Fecha" Type="ColumnType.DateOnly" Format="dd/MM/yyyy"></GridColumn>
+            <GridColumn Field=Cliente.Nombre HeaderText="Nombre Cliente" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(Facturas.Total) HeaderText="Total" Format="C2"></GridColumn>
+            <GridColumn Field=EstadoFactura.Nombre HeaderText="Estado" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn HeaderText="Acciones">
+                <GridCommandColumns>
+                    <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Detalles", CssClass = "e-flat", IconCss="e-icons e-edit" })"></GridCommandColumn>
+                </GridCommandColumns>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IFacturasService facturasService { get; set; }
+    public IEnumerable<Facturas> facturas { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    public SfGrid<Facturas>? facturasGrid { get; set; }
+
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        this.facturas = (await facturasService.CargarDatos()).ToList();
+        this.SpinnerVisible = false;
+    }
+
+    #region Controles
+
+    public void OnCommandClicked(CommandClickEventArgs<Facturas> args)
+    {
+        if (args.CommandColumn.ButtonOption.Content == "Detalles")
+        {
+            NavManager.NavigateTo("/facturas/detalle/" +args.RowData.Id.ToString());
+        }
+        
+    }
+
+    #endregion
+}

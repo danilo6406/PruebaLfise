@@ -1,0 +1,139 @@
+﻿@page "/subcategoriaproductos"
+@using EasySales.Client.Services
+@using EasySales.Shared
+<h3>Subcategoria de Productos.</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>SubCategorias</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@{
+    var SearchColumns = new string[] { "Nombre", "Descripcion" };
+}
+
+@if (subCategoriaProductos != null)
+{
+    <SfGrid @ref="subCategoriaProductosGrid" DataSource="@subCategoriaProductos" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+        Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="SubCategoriaProductos">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal" >
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as SubCategoriaProductos)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="SubCategoriaProductos"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(SubCategoriaProductos.Id) HeaderText="ID" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(SubCategoriaProductos.Nombre) HeaderText="Nombre" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(SubCategoriaProductos.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(SubCategoriaProductos.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(SubCategoriaProductos.FechaCreacion) Visible="false" HeaderText="Fecha Creacion" DefaultValue="@DateTime.Now" EditType="EditType.DateTimePickerEdit"></GridColumn>
+            <GridColumn Field=@nameof(SubCategoriaProductos.UsuarioCreacion) Visible="false" HeaderText="Usuario Creacion" DefaultValue="@defaultUser"></GridColumn>
+            <GridColumn Field=@nameof(SubCategoriaProductos.EmpresaId) Visible="false" HeaderText="Empresa" DefaultValue="@(2)"></GridColumn>
+            <GridColumn Field="CategoriaProductos.Nombre" HeaderText="Categoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.CheckBox})">
+                <EditTemplate>
+                    <SfDropDownList DataSource="@categoriaProductos" TItem="CategoriaProductos" TValue="long"
+                                    @bind-Value="@((context as SubCategoriaProductos).CategoriaProductos.Id)">
+                        <DropDownListFieldSettings Text="Nombre" Value="Id">
+                        </DropDownListFieldSettings>
+                    </SfDropDownList>
+                </EditTemplate>
+            </GridColumn>
+            <GridColumn HeaderText="Acciones">
+                <GridCommandColumns>
+                    <GridCommandColumn Type="CommandButtonType.Edit" ButtonOption="@(new CommandButtonOptions()
+                { IconCss="e-icons e-edit",CssClass="e-flat"})"></GridCommandColumn>
+                    <GridCommandColumn Type="CommandButtonType.Delete" ButtonOption="@(new CommandButtonOptions()
+                { IconCss = "e-icons e-delete", CssClass = "e-flat" })"></GridCommandColumn>
+                    <GridCommandColumn Type="CommandButtonType.Save" ButtonOption="@(new CommandButtonOptions()
+                { IconCss = "e-icons e-update", CssClass = "e-flat" })"></GridCommandColumn>
+                    <GridCommandColumn Type="CommandButtonType.Cancel" ButtonOption="@(new CommandButtonOptions()
+                { IconCss = "e-icons e-cancel-icon", CssClass = "e-flat" })"></GridCommandColumn>
+                </GridCommandColumns>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+@code {
+    [Inject]
+    public ISubCategoriaProductosService subCategoriaProductosService { get; set; }
+    public IEnumerable<SubCategoriaProductos> subCategoriaProductos { get; set; }
+
+    [Inject]
+    public ICategoriaProductosService CategoriaProductosService { get; set; }
+    public List<CategoriaProductos> categoriaProductos { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    public SfGrid<SubCategoriaProductos>? subCategoriaProductosGrid { get; set; }
+    public string defaultUser = "Sitema";
+    public string FooterSaveButtonText { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        subCategoriaProductos = (await subCategoriaProductosService.CargarDatos()).ToList();
+        categoriaProductos = (await CategoriaProductosService.CargarDatos()).ToList();
+        this.SpinnerVisible = false;
+    }
+
+    public async void ActionBeginHandler(ActionEventArgs<SubCategoriaProductos> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Add")
+            {
+                await subCategoriaProductosService.Agregar(Args.Data);
+                subCategoriaProductos = (await subCategoriaProductosService.CargarDatos()).ToList();
+                subCategoriaProductosGrid.Refresh();
+            }
+            else
+            {
+                await subCategoriaProductosService.Modificar(Args.Data);
+            }
+        }
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            await subCategoriaProductosService.Eliminar(Args.Data.Id);
+        }
+    }
+
+    public string GetDialogHeader(SubCategoriaProductos subCategoriaProductos)
+    {
+        if (subCategoriaProductos.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {subCategoriaProductos.Nombre} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        await subCategoriaProductosGrid.CloseEditAsync();
+    }
+
+    public async Task Save()
+    {
+        await subCategoriaProductosGrid.EndEditAsync();
+    }
+
+}
+

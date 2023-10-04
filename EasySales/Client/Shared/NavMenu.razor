@@ -1,0 +1,137 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">EasySales</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="ventas">
+                        <span class="oi oi-basket" aria-hidden="true"></span> Ventas
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="ventas/reservaciones">
+                        <span class="oi oi-calendar" aria-hidden="true"></span> Reservaciones
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="ventas/facturas">
+                        <span class="oi oi-calculator" aria-hidden="true"></span> Facturas
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="CRM/Clientes">
+                        <span class="oi oi-people" aria-hidden="true"></span> Clientes
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="()=>expandSubNavInventario = !expandSubNavInventario">
+                        <span class="oi oi-clipboard" aria-hidden="true"></span> Inventario
+                    </NavLink>
+                    @if (expandSubNavInventario)
+                    {
+                        <div class="pr-1 bg-secondary bg-gradient bg-opacity-25">
+                            <NavLink class="expand-menu nav-link" href="productos">
+                                <span class="oi oi-box" aria-hidden="true"></span> Productos
+                            </NavLink>
+                            <NavLink class="expand-menu nav-link" href="categoriaproductos">
+                                <span class="oi oi-layers" aria-hidden="true"></span> Categoria Productos
+                            </NavLink>
+                            <NavLink class="expand-menu nav-link" href="subcategoriaproductos">
+                                <span class="oi oi-layers" aria-hidden="true"></span> Subcategoria Productos
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="()=>expandSubNavCatalogos = !expandSubNavCatalogos">
+                        <span class="oi oi-list" aria-hidden="true"></span> Catalogos
+                    </NavLink>
+                    @if (expandSubNavCatalogos)
+                    {
+                        <div class="pr-1 bg-secondary bg-gradient bg-opacity-25">
+                            <NavLink class="nav-link" href="comun/tipoidentificacion">
+                                <span class="oi oi-browser" aria-hidden="true"></span> Tipo Identificacion
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="()=>expandSubNav = !expandSubNav">
+                        <span class="oi oi-account-login" aria-hidden="true"></span> Usuarios y Accesos
+                    </NavLink>
+                    @if (expandSubNav)
+                    {
+                        <div class="pr-1 bg-secondary bg-gradient bg-opacity-25">
+                            <NavLink class="expand-menu nav-link" href="sistema/usuarios">
+                                <span class="oi oi-person" aria-hidden="true"></span> Usuarios del sistema
+                            </NavLink>
+
+                            <NavLink class="nav-link" href="sistema/roles">
+                                <span class="oi oi-key"></span> Roles de Usuario
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="()=>expandSubNavSistema = !expandSubNavSistema">
+                        <span class="oi oi-cog" aria-hidden="true"></span> Configuracion Sistema
+                    </NavLink>
+                    @if (expandSubNavSistema)
+                    {
+                        <div class="pr-1 bg-secondary bg-gradient bg-opacity-25">
+
+                            <NavLink class="expand-menu nav-link" href="sistema/parametrossistema">
+                                <span class="oi oi-globe" aria-hidden="true"></span> Parametros del sistema
+                            </NavLink>
+                            <NavLink class="nav-link" href="counter">
+                                <span class="oi oi-plus" aria-hidden="true"></span> Counter
+                            </NavLink>
+                            <NavLink class="nav-link" href="fetchdata">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+                            </NavLink>
+
+                        </div>
+                    }
+                </div>
+
+            </Authorized>
+            <NotAuthorized>
+                <div class="bg-danger text-white">
+                    Usuario no autorizado!
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private bool expandSubNav;
+    private bool expandSubNavCatalogos;
+    private bool expandSubNavSistema;
+    private bool expandSubNavInventario;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+
+
+}

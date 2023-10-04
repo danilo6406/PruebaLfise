@@ -1,0 +1,117 @@
+﻿@page "/inventario/bodegas"
+@using EasySales.Client.Services
+@using EasySales.Shared
+
+<h3>Bodegas</h3>
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: royalblue;
+    }
+</style>
+
+<PageTitle>Bodegas</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (bodegas != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Descripcion" };
+
+    <SfGrid @ref="bodegasGrid" DataSource="@bodegas" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="Bodegas">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Normal">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as Bodegas)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="Bodegas"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(Bodegas.Id) HeaderText="ID" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(Bodegas.Nombre) HeaderText="Nombre" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(Bodegas.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})"></GridColumn>
+            <GridColumn Field=@nameof(Bodegas.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IBodegaService bodegaService { get; set; }
+    public IEnumerable<Bodegas> bodegas { get; set; }
+
+    public bool SpinnerVisible { get; set; }
+    public SfGrid<Bodegas>? bodegasGrid { get; set; }
+    public string FooterSaveButtonText { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        bodegas = (await bodegaService.CargarDatos()).ToList();
+        this.SpinnerVisible = false;
+    }
+
+    #region Controles
+
+    public async void ActionBeginHandler(ActionEventArgs<Bodegas> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Add")
+            {
+                await bodegaService.Agregar(Args.Data);
+                bodegas = (await bodegaService.CargarDatos()).ToList();
+                bodegasGrid.Refresh();
+            }
+            else
+            {
+                await bodegaService.Modificar(Args.Data);
+            }
+        }
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            await bodegaService.Eliminar(Args.Data.Id);
+        }
+    }
+
+    public string GetDialogHeader(Bodegas bodegas)
+    {
+        if (bodegas.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {bodegas.Nombre} ";
+        }
+    }
+
+    public async Task Cancel()
+    {
+        await bodegasGrid.CloseEditAsync();
+    }
+
+    public async Task Save()
+    {
+        await bodegasGrid.EndEditAsync();
+    }
+
+    #endregion
+
+}

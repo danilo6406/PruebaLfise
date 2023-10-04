@@ -1,0 +1,258 @@
+﻿@page "/productos"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider authenticationStateProvider
+
+@attribute [Authorize]
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: red;
+    }
+</style>
+
+<PageTitle>Productos</PageTitle>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+<h2>Lista de Productos</h2>
+<br />
+
+@if (productos != null)
+{
+    var SearchColumns = new string[] { "Nombre", "Descripcion" };
+
+    @*Thread.CurrentThread.CurrentCulture = new CultureInfo("es-NI");*@
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("us-US");
+    <SfGrid @ref="productosGrid" DataSource="@productos" AllowPaging=true AllowSorting=true AllowMultiSorting=false AllowFiltering=true
+            Toolbar="@(new List<string>() { "Add", "Edit", "Update", "Delete", "Cancel","Search"})" TValue="Productos" Width="100%">
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Dialog">
+            <HeaderTemplate>
+                <span>@GetDialogHeader(context as Productos)</span>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <SfButton OnClick="@Save" IsPrimary="true">@FooterSaveButtonText</SfButton>
+                <SfButton OnClick="@Cancel">Cancel</SfButton>
+            </FooterTemplate>
+        </GridEditSettings>
+        <GridEvents OnActionBegin="ActionBeginHandler" TValue="Productos" CommandClicked="OnCommandClicked"></GridEvents>
+        <GridSearchSettings Fields="@SearchColumns"></GridSearchSettings>
+        <GridPageSettings PageSize="10" PageSizes="@pagerDropdownOptions"></GridPageSettings>
+        <GridFilterSettings Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.Menu"></GridFilterSettings>
+        <GridColumns>
+            <GridColumn AllowSorting=false AllowAdding=false IsPrimaryKey=true Visible="false" Field=@nameof(Productos.Id) HeaderText="ID Producto" AllowFiltering=false></GridColumn>
+            <GridColumn Field=@nameof(Productos.Nombre) HeaderText="Nombre Producto" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="150"></GridColumn>
+            <GridColumn Field=@nameof(Productos.Descripcion) HeaderText="Descripcion" FilterSettings="@(new FilterSettings() {Operator=Operator.Contains})" Width="200"></GridColumn>
+            <GridColumn Field=@nameof(Productos.PrecioCosto) HeaderText="P.Compra" Format="C2"></GridColumn>
+            <GridColumn Field=@nameof(Productos.PrecioVenta) HeaderText="P.Venta" Format="C2"></GridColumn>
+            <GridColumn Field=@nameof(Productos.AplicaIVA) HeaderText="Iva" DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(Productos.EsServicio) HeaderText="Es Servicio" DisplayAsCheckBox="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(Productos.Activo) HeaderText="Activo" DisplayAsCheckBox="true" DefaultValue="true" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" EditType="EditType.BooleanEdit"></GridColumn>
+            <GridColumn Field=@nameof(Productos.FechaCreacion) Visible="false" HeaderText="Fecha Creacion"></GridColumn>
+            <GridColumn Field=@nameof(Productos.UsuarioCreacion) Visible="false" HeaderText="Usuario Creacion"></GridColumn>
+            <GridColumn Field=@nameof(Productos.EmpresaId) Visible="false" HeaderText="Empresa"></GridColumn>
+            <GridColumn Field="CategoriaProductos.Nombre" HeaderText="Categoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})">
+                <EditTemplate>
+                    <SfDropDownList ID="ddlCatProd" DataSource="@categoriaProductos" TItem="CategoriaProductos" TValue="long"
+                    @bind-Value="@((context as Productos).CategoriaProductos.Id)">
+                        <DropDownListEvents TValue="long" TItem="CategoriaProductos" ValueChange="ValueChange"></DropDownListEvents>
+                        <DropDownListFieldSettings Text="Nombre" Value="Id"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </EditTemplate>
+            </GridColumn>
+            <GridColumn Field="SubCategoriaProductos.Nombre" HeaderText="SubCategoria" FilterSettings="@(new FilterSettings() {Type = Syncfusion.Blazor.Grids.FilterType.Excel})">
+                <EditTemplate>
+                    <SfDropDownList DataSource="@subCategoriaProductos" TItem="SubCategoriaProductos" TValue="long"
+                    @bind-Value="@((context as Productos).SubCategoriaProductos.Id)" Query="@subCategoriaFiltroQuery" Placeholder="Seleccione">
+                        <DropDownListFieldSettings Text="Nombre" Value="Id"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </EditTemplate>
+            </GridColumn>
+            <GridColumn HeaderText="Acciones">
+                <GridCommandColumns>
+                    <GridCommandColumn ButtonOption="@(new CommandButtonOptions() {
+                    Content = "Detalles", CssClass = "e-flat", IconCss="e-icons e-edit" })"></GridCommandColumn>
+                </GridCommandColumns>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+
+
+@if (VistaAutorizada = false)
+{
+    <p> Usted no esta autorizado para ver este modulo.</p>
+}
+
+@*Welcome to your new app.
+<SurveyPrompt Title="Todo bien?" />*@
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IProductosService ProductosService { get; set; }
+    public List<Productos> productos { get; set; }
+
+    [Inject]
+    public ICategoriaProductosService? CategoriaProductosService { get; set; }
+    public List<CategoriaProductos>? categoriaProductos { get; set; }
+
+    [Inject]
+    public ISubCategoriaProductosService? subCategoriaProductosService { get; set; }
+    public List<SubCategoriaProductos>? subCategoriaProductos { get; set; }
+
+
+    public bool SpinnerVisible { get; set; }
+    public bool VistaAutorizada { get; set; } = false;
+    string[] pagerDropdownOptions = new string[] { "All", "5", "10", "15", "20" };
+    public SfGrid<Productos>? productosGrid { get; set; }
+    public string? FooterSaveButtonText { get; set; }
+    public Syncfusion.Blazor.Data.Query? subCategoriaFiltroQuery { get; set; }
+
+    #endregion
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = (await authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+            if (user != null && user.IsAuthenticated)
+            {
+                this.SpinnerVisible = true;
+                this.VistaAutorizada = true;
+                productos = (await ProductosService.CargarProductos()).ToList();
+                if (CategoriaProductosService is not null)
+                {
+                    categoriaProductos = (await CategoriaProductosService.CargarDatos()).ToList();
+                }
+                if (subCategoriaProductosService is not null)
+                {
+                    subCategoriaProductos = (await subCategoriaProductosService.CargarDatos()).ToList();
+                }
+                this.SpinnerVisible = false;
+            }
+            else
+            {
+                this.VistaAutorizada = false;
+            }
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    public void GoToBuscar()
+    {
+        NavManager.NavigateTo("/productos/searchproductos/");
+    }
+
+    public void GoToEditar(long id)
+    {
+        NavManager.NavigateTo("/productos/Edit/" + id.ToString());
+    }
+
+    #region Eventos Controles
+
+    public async void ActionBeginHandler(ActionEventArgs<Productos> Args)
+    {
+        if (Args is not null)
+        {
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.BeginEdit))
+            {
+                this.subCategoriaFiltroQuery = new Syncfusion.Blazor.Data.Query().Where(new WhereFilter()
+                    {
+                        Field = "CategoriaProductosId",
+                        Operator = "equal",
+                        value = Args.Data.CategoriaProductos.Id,
+                        IgnoreCase = false,
+                        IgnoreAccent = false
+                    });
+            }
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+            {
+                if (Args.Action == "Add")
+                {
+                    await ProductosService.AgregarProducto(Args.Data);
+                    productos = (await ProductosService.CargarProductos()).ToList();
+                    productosGrid.Refresh();
+                }
+                else
+                {
+                    await ProductosService.ModificarProducto(Args.Data);
+                    productosGrid.Refresh();
+                }
+            }
+            if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+            {
+                await ProductosService.EliminarProducto(Args.Data.Id);
+            }
+        }
+    }
+
+    public void OnCommandClicked(CommandClickEventArgs<Productos> args)
+    {
+        if (args.CommandColumn.ButtonOption.Content == "Detalles")
+        {
+            GoToEditar(args.RowData.Id);
+        }
+    }
+
+    public string GetDialogHeader(Productos productos)
+    {
+        if (productos.Id == 0)
+        {
+            FooterSaveButtonText = "Agregar";
+            return "Agregar Nuevo Registro";
+        }
+        else
+        {
+            FooterSaveButtonText = "Actualizar";
+            return $"Editar Detalles {productos.Nombre} ";
+        }
+    }
+
+    public void ValueChange(ChangeEventArgs<long, CategoriaProductos> args)
+    {
+        if (productosGrid is not null)
+        {
+            this.subCategoriaFiltroQuery = new Query().Where(new WhereFilter()
+                {
+                    Field = "CategoriaProductosId",
+                    Operator = "equal",
+                    value = args.ItemData.Id,
+                    IgnoreCase = false,
+                    IgnoreAccent = false
+                });
+            productosGrid.PreventRender(false);
+        }
+    }
+
+    public async Task Cancel()
+    {
+        if (productosGrid is not null)
+        {
+            await productosGrid.CloseEditAsync();
+        }
+    }
+
+    public async Task Save()
+    {
+        if (productosGrid is not null)
+        {
+            await productosGrid.EndEditAsync();
+        }
+    }
+
+    #endregion
+
+}

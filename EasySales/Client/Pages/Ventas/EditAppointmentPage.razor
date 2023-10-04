@@ -1,0 +1,62 @@
+﻿@using EasySales.Shared;
+@using Radzen
+@using Radzen.Blazor
+
+@inject DialogService DialogService
+
+<RadzenTemplateForm TItem="Reservaciones" Data="@model" Submit=@OnSubmit>
+<div class="row" style="margin-bottom: 16px">
+    <div class="col-md-3">
+        <RadzenLabel Text="Evento:" />
+    </div>
+    <div class="col-md-9">
+            <RadzenTextBox @bind-Value="@model.Titulo" Name="Text" ReadOnly="true" class="w-100" />
+    </div>
+</div>
+    <div class="row" style="margin-bottom: 16px">
+        <div class="col-md-3">
+            <RadzenLabel Text="Fecha Evento" />
+        </div>
+        <div class="col">
+            <RadzenDatePicker @bind-Value="@model.FechaReservacion" Name="Start" ShowTime="false" DateFormat="dd/MM/yyyy" ReadOnly="true" />
+        </div>
+    </div>
+<div class="row" style="margin-bottom: 16px">
+    <div class="col-md-3">
+        <RadzenLabel Text="Hora Inicio" />
+    </div>
+    <div class="col">
+            <RadzenDatePicker @bind-Value="@model.HoraInicio" Name="Start" ShowTime="true" TimeOnly="true" DateFormat="HH:mm" ReadOnly="true" />
+    </div>
+</div>
+<div class="row" style="margin-bottom: 16px">
+    <div class="col-md-3">
+        <RadzenLabel Text="Hora Fin" />
+    </div>
+    <div class="col">
+            <RadzenDatePicker Name="End" @bind-Value="@model.HoraFin" ShowTime="true" TimeOnly="true" DateFormat="HH:mm" ReadOnly="true" />
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col">
+        <RadzenButton ButtonType="Radzen.ButtonType.Submit" Text="Ok" />
+    </div>
+</div>
+</RadzenTemplateForm>
+@code {
+    [Parameter]
+    public Reservaciones reservaciones { get; set; }
+
+    Reservaciones model = new ();
+
+    protected override void OnParametersSet()
+    {
+        model = reservaciones;
+    }
+
+    void OnSubmit(Reservaciones model)
+    {
+        DialogService.Close(model);
+    }
+}

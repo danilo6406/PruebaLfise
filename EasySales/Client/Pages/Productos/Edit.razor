@@ -1,0 +1,452 @@
+﻿@page "/Productos/edit/{Id:long}"
+@using EasySales.Client.Services
+@using EasySales.Shared
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Http
+
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+@attribute [Authorize]
+
+<style>
+    .e-spinner-pane .e-spinner-inner .e-spin-bootstrap5 {
+        stroke: green;
+    }
+</style>
+
+<PageTitle>Editar</PageTitle>
+
+<h3>Editar Productos</h3>
+
+<SfSpinner Label="Cargando Datos, Por Favor Espere." Size="50" Type="SpinnerType.Bootstrap5" @bind-Visible="SpinnerVisible">
+</SfSpinner>
+
+@if (producto != null)
+{
+   <div class="card-deck">
+
+        @*<div class="card m-3" style="min-width: 18rem; max-width:30.5%;">
+            <div class="card-header">
+                <h3>@producto.Nombre </h3>
+            </div>
+            <div class="card-body">
+                <h3>@producto.Descripcion </h3>
+            </div>
+            <img class="card-img-top imageThumbnail" src="@($"Files/FotosProductos/{producto.FotoPath}")" />
+
+            <div class="card-footer text-center">
+                <a href="#" class="btn btn-primary m-1">View</a>
+
+                <a href="#" class="btn btn-primary m-1">Edit</a>
+
+                <a href="#" class="btn btn-danger m-1">Delete</a>
+            </div>
+        </div>*@
+
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card mt-3 mb-3">
+                    <div class="card-header">
+                        <h2>Detalles del producto</h2>
+                    </div>
+                    <div class="card-body">
+                        @* @if (isRegistrationSuccess)
+                    {
+                    <div class="alert alert-success" role="alert">Registration successful</div>
+                    }*@
+
+                        <EditForm Model="@producto" OnValidSubmit="FormValidSubmit" OnInvalidSubmit="FormInvalidSubmit">
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Foto del producto</label>
+                                <div class="col">
+                                    @if (producto.FotoPath is null | producto.FotoPath == string.Empty)
+                                    {
+                                        <img class="card-img-top imageThumbnail" alt="product image" src="@(fotoPathParametro.ValorString + "NoImagePlaceholder.svg")" width="200" height="200" />
+                                    }
+                                    else
+                                    {
+                                        <img class="card-img-top imageThumbnail" alt="product image" src="@(fotoPathParametro.ValorString + producto.FotoPath)" width="200" height="200" />
+                                    }
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Cargar imagen</label>
+                                <div class="col">
+                                    <label class="custom-file-label"> Seleccione archivo:</label>
+                                    @if (!bClearInputFile)
+                                    {
+                                        <InputFile class="form-control-file" OnChange="@LoadFilesCheck" accept=".png,.jpg,.jpeg,.webp" />
+                                    }
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Nombre</label>
+                                <div class="col">
+                                    <InputText class="form-control" @bind-Value="producto.Nombre" />
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Descripcion</label>
+                                <div class="col">
+                                    <InputText class="form-control" @bind-Value="producto.Descripcion" />
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Precio Costo</label>
+                                <div class="col">
+                                    <InputNumber typeof="" class="form-control" @bind-Value="producto.PrecioCosto" />
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Precio Venta</label>
+                                <div class="col">
+                                    <InputNumber typeof="" class="form-control" @bind-Value="producto.PrecioVenta" />
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Aplica IVA</label>
+                                <div class="col">
+                                    <SfCheckBox Label="IVA" @bind-Checked="producto.AplicaIVA"></SfCheckBox>
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Es Servicio</label>
+                                <div class="col">
+                                    <SfCheckBox Label="Servicio" @bind-Checked="producto.EsServicio"></SfCheckBox>
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Activo</label>
+                                <div class="col">
+                                    <SfCheckBox Label="Activo" @bind-Checked="producto.Activo"></SfCheckBox>
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Categoria</label>
+                                <div class="col">
+                                    @*<SfComboBox TValue="long?" TItem="CategoriaProductos" @bind-Value="@producto.CategoriaProductosId" DataSource="@categoriaProductos">
+                                <ComboBoxFieldSettings Text="Nombre" Value="Id"></ComboBoxFieldSettings>
+                                </SfComboBox>//Permite un input de text*@
+                                    <SfDropDownList TValue="long?" TItem="CategoriaProductos" @bind-Value="@producto.CategoriaProductosId"
+                                                DataSource="@categoriaProductos">
+                                        <DropDownListEvents TValue="long?" TItem="CategoriaProductos" ValueChange="DdlCAtegoriaValueChange"></DropDownListEvents>
+                                        <DropDownListFieldSettings Text="Nombre" Value="Id"></DropDownListFieldSettings>
+                                    </SfDropDownList>
+                                </div>
+                            </div>
+                            <div class="form-group row mt-2">
+                                <label class="control-label col-md-12">Subcategoria</label>
+                                <div class="col">
+                                    <SfDropDownList TValue="long?" Enabled="@enableSubCatDdl" TItem="SubCategoriaProductos" DataSource="@subCategoriaProductos"
+                                                @bind-Value="@producto.SubCategoriaProductosId" Query="@subCategoriaFiltroQuery">
+                                        <DropDownListFieldSettings Text="Nombre" Value="Id"></DropDownListFieldSettings>
+                                    </SfDropDownList>
+                                </div>
+                            </div>
+
+                            @*<div class="form-group row">
+                        <label class="control-label col-md-12">Password</label>
+                        <div class="col">
+                        <InputText type="password" class="form-control" @bind-Value="registration.Password"></InputText>
+                        </div>
+                        </div>
+
+                        <div class="form-group row">
+                        <label class="control-label col-md-12">Confirm Password</label>
+                        <div class="col">
+                        <InputText type="password" class="form-control" @bind-Value="registration.ConfirmPassword"></InputText>
+                        </div>
+                        </div>
+
+                        <div class="form-group row">
+                        <label class="control-label col-md-12">Gender</label>
+                        <div class="col">
+                        <InputSelect class="form-control" @bind-Value="registration.Gender">
+                        <option value="-- Select City --">-- Select Gender --</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        </InputSelect>
+                        </div>
+                        </div>*@
+
+                            <div class="form-group card-footer" align="right">
+                                <button type="submit" class="btn btn-success">Guardar</button>
+                                <button type="reset" @onclick=Cancelar class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    #region Variables
+
+    [Inject]
+    public IProductosService ProductosService { get; set; }
+    public Productos producto { get; set; }
+
+    [Inject]
+    public ICategoriaProductosService? CategoriaProductosService { get; set; }
+    public List<CategoriaProductos>? categoriaProductos { get; set; }
+
+    [Inject]
+    public ISubCategoriaProductosService? subCategoriaProductosService { get; set; }
+    public List<SubCategoriaProductos>? subCategoriaProductos { get; set; }
+
+    [Inject]
+    public IParametrosSistemaService? parametrosSistemaService { get; set; }
+    public ParametrosSistema? fotoPathParametro { get; set; }
+
+    [Inject]
+    public IFilesaveService filesaveService { get; set; }
+
+    private long ProductoId { get; set; }
+    private bool SpinnerVisible { get; set; }
+    private bool enableSubCatDdl { get; set; } = true;
+    private Syncfusion.Blazor.Data.Query? subCategoriaFiltroQuery { get; set; }
+    private IBrowserFile loadedFile;
+    private bool bClearInputFile;
+
+    [Parameter]
+    public long Id { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.SpinnerVisible = true;
+        producto = (await ProductosService.ObtenerProductoXId(Id));
+        categoriaProductos = (await CategoriaProductosService.CargarDatos()).ToList();
+        subCategoriaProductos = (await subCategoriaProductosService.CargarDatos()).ToList();
+        fotoPathParametro = (await parametrosSistemaService.ObtenerXNombre("DirectorioFotoProductos"));
+        this.subCategoriaFiltroQuery = new Syncfusion.Blazor.Data.Query().Where(new WhereFilter()
+            {
+                Field = "CategoriaProductosId",
+                Operator = "equal",
+                value = producto.CategoriaProductosId,
+                IgnoreCase = false,
+                IgnoreAccent = false
+            });
+        this.SpinnerVisible = false;
+    }
+
+    #region Eventos Controles
+
+    private void DdlCAtegoriaValueChange(ChangeEventArgs<long?, CategoriaProductos> args)
+    {
+        this.subCategoriaFiltroQuery = new Syncfusion.Blazor.Data.Query().Where(new WhereFilter()
+            {
+                Field = "CategoriaProductosId",
+                Operator = "equal",
+                value = args.ItemData.Id,
+                IgnoreCase = false,
+                IgnoreAccent = false
+            });
+    }
+
+    private void ClearInputFile()
+    {
+        loadedFile = null;
+        bClearInputFile = true;
+        StateHasChanged();
+        bClearInputFile = false;
+        StateHasChanged();
+    }
+
+    private void Submit(EditContext context)
+    {
+        try
+        {
+            Console.WriteLine("A guardar bien");
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine("Error: {Error}", ex.Message);
+        }
+    }
+
+    private async void FormValidSubmit()
+    {
+        try
+        {
+            CategoriaProductos cat = new();
+            long CatId = producto.CategoriaProductosId ?? default(long);
+            cat = await CategoriaProductosService.ObtenerXId(CatId);
+            producto.CategoriaProductos = cat;
+
+            SubCategoriaProductos SubCat = new();
+            long SubCatId = producto.SubCategoriaProductosId ?? default(long);
+            SubCat = await subCategoriaProductosService.ObtenerXId(SubCatId);
+            producto.SubCategoriaProductos = SubCat;
+
+            #region Guardar foto
+
+            if (loadedFile is not null)
+            {
+
+                var fileContent = new StreamContent(loadedFile.OpenReadStream());
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(loadedFile.ContentType);
+                System.IO.FileInfo fileInfo = new System.IO.FileInfo(loadedFile.Name);
+
+                UploadResult fileToUploadData = new()
+                    {
+                        FileName = loadedFile.Name,
+                        StoredFileName = producto.EmpresaId + "_" + producto.Id.ToString() + fileInfo.Extension
+                    };
+
+                UploadResult uploadResult = await UploadFile(fileToUploadData);
+                if (uploadResult.Uploaded == false)
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "No se pudo cargar la imagen del producto."); // Alert
+                    ClearInputFile();
+                    return;
+                }
+
+                producto.FotoPath = fileToUploadData.StoredFileName;
+            }
+
+            #endregion
+
+            await ProductosService.ModificarProducto(producto);
+            ClearInputFile();
+            await JsRuntime.InvokeVoidAsync("alert", "Cambios guardados exitosamente."); // Alert
+            NavManager.NavigateTo("/productos/");
+        }
+        catch (Exception ex)
+        {
+
+            await JsRuntime.InvokeVoidAsync("alert", "No se pudo guardar los cambios. Error:" + ex.Message); // Alert
+            ClearInputFile();
+            return;
+        }
+    }
+
+    private void FormInvalidSubmit(EditContext context)
+    {
+        try
+        {
+            Console.WriteLine("Informacion no valida, por favor revise los datos.");
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine("Error: {Error}", ex.Message);
+        }
+    }
+
+    private void Cancelar()
+    {
+        NavManager.NavigateTo("/productos/");
+    }
+
+    private void LoadFilesCheck(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            loadedFile = e.File;
+            long maxFileSize = 1024 * 768;
+
+            var fileContent = new StreamContent(loadedFile.OpenReadStream(maxFileSize));
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(loadedFile.ContentType);
+            System.IO.FileInfo fileInfo = new System.IO.FileInfo(loadedFile.Name);
+            string ext = fileContent.Headers.ContentType.MediaType;
+            int index = ext.IndexOf("/");
+            if (index >= 0)
+                ext = ext.Substring(0, index);
+            if (ext.ToString() != "image")
+            {
+                JsRuntime.InvokeVoidAsync("alert", "Archivo no valido para cargar como imagen del producto."); // Alert
+                ClearInputFile();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("File: {FileName} Error: {Error}" + ex.Message);
+            ClearInputFile();
+            UploadResult uploadResult = new()
+                {
+                    FileName = loadedFile.Name,
+                    Message = ex.Message,
+                    ErrorCode = 6,
+                    Uploaded = false
+                };
+        }
+    }
+
+    private async Task<UploadResult> UploadFile(UploadResult uploadResult)
+    {
+        if (loadedFile != null)
+        {
+            // Create a new instance of HttpClient
+            var httpClient = new HttpClient();
+
+            // Create a new instance of MultipartFormDataContent
+            var formDataContent = new MultipartFormDataContent();
+
+            // Convert the IBrowserFile to StreamContent and add it to the MultipartFormDataContent
+            var fileContent = new StreamContent(loadedFile.OpenReadStream());
+            fileContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "file",
+                    //FileName = loadedFile.Name
+                    FileName = uploadResult.StoredFileName
+                };
+            formDataContent.Add(fileContent, "file", loadedFile.Name);
+
+            // Send the file to the server using HttpClient
+            //var response = await httpClient.PostAsync("/YourControllerName/PostFile", formDataContent); -- controlador en el mismo proyecto.
+            var response = await filesaveService.PostFile(formDataContent);
+
+            // Handle the response as needed
+            UploadResult newUploadResults = response;
+            if (newUploadResults is not null)
+            {
+                return newUploadResults;
+            }
+            else
+            {
+                return null;
+            }
+
+            // Reset the selected file after uploading
+            loadedFile = null;
+            ClearInputFile();
+        }
+        return null;
+    }
+
+    #endregion
+    
+    private async Task LoadImage()
+    {
+        //var httpClient = new HttpClient();
+
+        //var serverUrl = NavManager.BaseUri;
+        //var imageUrl = $"{serverUrl}Files/FotosProductos/image1.png";
+
+        //var response = await httpClient.GetAsync(imageUrl);
+
+        //if (response.IsSuccessStatusCode)
+        //{
+        //    imageUrl = $"data:image/png;base64,{Convert.ToBase64String(await response.Content.ReadAsByteArrayAsync())}";
+        //}
+        //else
+        //{
+        //    imageUrl = null;
+        //}
+
+        //// Update the imageUrl state variable to trigger re-rendering
+        //this.imageUrl = imageUrl;
+    }
+
+}
+
